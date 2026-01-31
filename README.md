@@ -14,7 +14,16 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) (or [http://localhost:3001](http://localhost:3001) if 3000 is in use) with your browser to see the result.
+
+### Troubleshooting
+
+- **"Unable to acquire lock at `.next/dev/lock`"** – Another `next dev` is running or a previous run didn’t exit cleanly. Stop any running dev server, then delete the lock file or the whole `.next` folder and run `pnpm dev` again:
+  ```bash
+  rm -rf .next
+  # or on Windows: rmdir /s /q .next
+  pnpm dev
+  ```
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
