@@ -43,7 +43,7 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/reviews`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/reviews`, {
         method: 'POST',
         credentials: 'include',
         headers: {
