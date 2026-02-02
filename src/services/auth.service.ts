@@ -1,8 +1,10 @@
 "use server";
 
+import { API_URL } from '@/config/api';
+
 export const registerUser = async (data: any) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+    const res = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -17,7 +19,7 @@ export const registerUser = async (data: any) => {
 
 export const loginUser = async (data: any) => {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
