@@ -1,8 +1,10 @@
 import TutorGrid from "@/components/tutors/tutor-grid";
 import TutorFilters from "@/components/tutors/tutor-filters";
 import TutorSearch from "@/components/tutors/tutor-search";
-import { Suspense } from "react";
 import { Container } from "@/components/ui/container";
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic';
 
 export default function TutorsPage() {
     return (
@@ -24,9 +26,7 @@ export default function TutorsPage() {
                         <TutorSearch />
                     </div>
                     
-                    <Suspense fallback={<div>Loading tutors...</div>}>
-                        <TutorGrid />
-                    </Suspense>
+                    <TutorGrid />
                 </div>
             </div>
         </Container>
