@@ -13,7 +13,12 @@ interface TutorCardProps {
 export default function TutorCard({ tutor }: TutorCardProps) {
   const profile = tutor.tutorProfile;
   
-  if (!profile) return null;
+  // Show tutor even without complete profile
+  const hasProfile = !!profile;
+  const rating = hasProfile ? (profile.rating || 0) : 0;
+  const subjects = hasProfile && profile.subjects ? profile.subjects : [];
+  const hourlyRate = hasProfile ? (profile.hourlyRate || 0) : 0;
+  const bio = hasProfile ? (profile.bio || "") : "";
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg">
@@ -32,12 +37,17 @@ export default function TutorCard({ tutor }: TutorCardProps) {
           <div className="flex-1">
             <CardTitle className="text-lg line-clamp-1">{tutor.name}</CardTitle>
             <CardDescription className="text-sm">
-              {profile.subjects?.map(s => s.subject.name).join(", ") || "No subjects"}
+              {subjects.length > 0 ? subjects.map(s => s.subject.name).join(", ") : "Setting up profile..."}
             </CardDescription>
+            {!hasProfile && (
+              <Badge variant="outline" className="mt-1 text-xs">
+                New Tutor
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-1 text-sm font-medium text-yellow-600 ml-2">
             <Star className="h-4 w-4 fill-current" />
-            {profile.rating.toFixed(1)}
+            {rating.toFixed(1)}
           </div>
         </div>
       </CardHeader>
@@ -51,21 +61,27 @@ export default function TutorCard({ tutor }: TutorCardProps) {
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            <span>{profile.experience} years experience</span>
+            <span>{hasProfile ? `${profile.experience || 0} years experience` : "Experience not set"}</span>
           </div>
           
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-primary">
-              ${profile.hourlyRate}/hour
+              ${hourlyRate}/hour
             </span>
             <Badge variant="secondary" className="text-xs">
-              {profile.totalReviews} reviews
+              {hasProfile ? `${profile.totalReviews || 0} reviews` : "No reviews"}
             </Badge>
           </div>
           
-          {profile.bio && (
+          {bio && (
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {profile.bio}
+              {bio}
+            </p>
+          )}
+          
+          {!hasProfile && (
+            <p className="text-sm text-muted-foreground italic">
+              This tutor is setting up their profile. Check back soon for more details!
             </p>
           )}
         </div>

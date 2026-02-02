@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
+import { Logo } from "./logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu, GraduationCap, User, LogOut, Settings, BookOpen } from "lucide-react";
+import { Menu, User, LogOut, Settings, BookOpen } from "lucide-react";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,9 +42,8 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <GraduationCap className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">SkillBridge</span>
+            <div className="opacity-50">
+              <Logo />
             </div>
             <div className="h-8 w-32 animate-pulse rounded-md bg-muted" />
           </div>
@@ -53,14 +53,11 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-blue-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">SkillBridge</span>
-          </Link>
+          <Logo />
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -68,9 +65,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors relative group"
               >
                 {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full"></span>
               </Link>
             ))}
           </div>
@@ -80,10 +78,10 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-gray-200 hover:border-blue-300 transition-colors">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={user.image} alt={user.name} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                         {user.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -103,19 +101,19 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center cursor-pointer">
+                    <Link href={user.role === 'ADMIN' ? '/admin' : '/dashboard'} className="flex items-center cursor-pointer">
                       <BookOpen className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/profile" className="flex items-center cursor-pointer">
+                    <Link href={user.role === 'ADMIN' ? '/admin/profile' : '/dashboard/profile'} className="flex items-center cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings" className="flex items-center cursor-pointer">
+                    <Link href={user.role === 'ADMIN' ? '/admin/settings' : '/dashboard/settings'} className="flex items-center cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
                     </Link>
@@ -130,10 +128,10 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost">Login</Button>
+                  <Button variant="ghost" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors">Login</Button>
                 </Link>
                 <Link href="/register">
-                  <Button>Get Started</Button>
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all">Get Started</Button>
                 </Link>
               </>
             )}
@@ -142,24 +140,20 @@ export function Navbar() {
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-gray-600 hover:text-blue-600">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
               <div className="flex flex-col space-y-4 mt-6">
-                <div className="flex items-center space-x-2">
-                  <GraduationCap className="h-8 w-8 text-primary" />
-                  <span className="text-xl font-bold">SkillBridge</span>
-                </div>
-
+                <Logo />
                 <div className="flex flex-col space-y-3">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="text-lg font-medium text-muted-foreground hover:text-primary transition-colors"
+                      className="text-lg font-medium text-gray-600 hover:text-blue-600 transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}
@@ -173,7 +167,7 @@ export function Navbar() {
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={user.image} alt={user.name} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                             {user.name?.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -218,7 +212,7 @@ export function Navbar() {
                         </Button>
                       </Link>
                       <Link href="/register" onClick={() => setIsOpen(false)}>
-                        <Button className="w-full">
+                        <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                           Get Started
                         </Button>
                       </Link>

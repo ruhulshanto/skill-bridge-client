@@ -16,15 +16,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
-    ],
-  },
-  async rewrites() {
-    return [
       {
-        source: '/api/:path*',
-        destination: 'https://skill-bridge-server-shanto.vercel.app/api/:path*',
+        protocol: 'https',
+        hostname: 'i.ibb.co.com',
       },
-    ];
+      {
+        protocol: 'https',
+        hostname: 'ibb.co',
+      },
+    ],
   },
 };
 

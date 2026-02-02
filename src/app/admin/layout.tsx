@@ -1,8 +1,8 @@
 "use client";
 
 import { RoleGuard } from "@/components/auth/role-guard";
-import { Navbar } from "@/components/layout/navbar";
-import Link from "next/link";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminNavbar } from "@/components/admin/admin-navbar";
 
 export default function AdminLayout({
   children,
@@ -11,25 +11,22 @@ export default function AdminLayout({
 }) {
   return (
     <RoleGuard allowedRoles={["ADMIN"]}>
-      <div className="min-h-screen">
-        <Navbar />
-        <nav className="border-b bg-muted/40 px-4 py-2">
-          <div className="flex gap-4">
-            <Link href="/admin" className="text-sm font-medium hover:underline">
-              Dashboard
-            </Link>
-            <Link href="/admin/users" className="text-sm font-medium hover:underline">
-              Users
-            </Link>
-            <Link href="/admin/bookings" className="text-sm font-medium hover:underline">
-              Bookings
-            </Link>
-            <Link href="/admin/categories" className="text-sm font-medium hover:underline">
-              Categories
-            </Link>
+      <div className="h-full relative bg-gray-50 dark:bg-gray-900">
+        {/* Mobile Navbar */}
+        <div className="md:hidden">
+          <AdminNavbar />
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80]">
+          <AdminSidebar />
+        </div>
+
+        <main className="md:pl-72 min-h-screen pt-16 md:pt-0">
+          <div className="h-full p-4 md:p-8">
+            {children}
           </div>
-        </nav>
-        <main className="container mx-auto px-4 py-6">{children}</main>
+        </main>
       </div>
     </RoleGuard>
   );

@@ -95,6 +95,7 @@ export default function RegisterForm() {
         provider: "google",
         callbackURL: `${window.location.origin}/`,
       });
+      // Note: The user will be redirected to Google OAuth, so loading state will reset on page reload
     } catch (err) {
       toast.error("Google signup failed. Please try again.");
       setIsGoogleLoading(false);

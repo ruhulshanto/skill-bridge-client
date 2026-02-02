@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { API_URL } from '@/config/api';
 
 import { User } from '@/types';
 
@@ -34,10 +34,11 @@ class ApiClient {
           'Content-Type': 'application/json',
           ...options.headers,
         },
+        credentials: 'include', // Include cookies for Better Auth
         ...options,
       };
 
-      // Add auth token if available
+      // Add auth token if available (for backward compatibility)
       const token = this.getAuthToken();
       if (token) {
         config.headers = {
@@ -105,22 +106,38 @@ class ApiClient {
     search?: string;
     page?: number;
     limit?: number;
-  }) {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
+    minRating?: string;
+    maxRate?: string;
+  }): Promise<ApiResponse<{ data: User[], meta: any }>> {
+    try {
+      const searchParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            searchParams.append(key, value.toString());
+          }
+        });
+      }
 
-    const query = searchParams.toString();
-    return this.request(`/tutors${query ? `?${query}` : ''}`);
+      const query = searchParams.toString();
+      return this.request<{ data: User[], meta: any }>(`/api/tutors${query ? `?${query}` : ''}`);
+    } catch (error) {
+      // Return empty result if API is not available
+      console.warn("API not available, returning empty tutors:", error);
+      return {
+        data: { data: [], meta: { total: 0, page: 1, limit: 10 } }
+      };
+    }
   }
 
-  async getTutorById(id: string) {
-    return this.request(`/tutors/${id}`);
+  async getTutorById(id: string): Promise<ApiResponse<User>> {
+    try {
+      return this.request<User>(`/api/tutors/${id}`);
+    } catch (error) {
+      // Return null if API is not available
+      console.warn("API not available, returning null for tutor:", error);
+      return { data: undefined };
+    }
   }
 
   // Bookings endpoints
@@ -142,9 +159,20 @@ class ApiClient {
   }
 
   async updateBookingStatus(id: string, status: 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') {
-    return this.request(`/bookings/${id}`, {
+    return this.request(`/api/bookings/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
+    });
+  }
+
+  async rescheduleBooking(id: string, rescheduleData: {
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+  }) {
+    return this.request(`/api/bookings/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(rescheduleData),
     });
   }
 
@@ -154,15 +182,30 @@ class ApiClient {
     rating: number;
     comment?: string;
   }) {
-    return this.request('/reviews', {
+    return this.request('/api/reviews', {
       method: 'POST',
       body: JSON.stringify(reviewData),
     });
   }
 
+  async getTutorReviews(tutorId: string) {
+    return this.request(`/api/reviews/tutor/${tutorId}`);
+  }
+
   // Categories endpoints
   async getCategories() {
     return this.request('/categories');
+  }
+
+  // Admin profile endpoints
+  async updateAdminProfile(profileData: {
+    name?: string;
+    phone?: string;
+  }) {
+    return this.request('/api/admin/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
   }
 }
 

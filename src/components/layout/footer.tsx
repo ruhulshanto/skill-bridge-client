@@ -38,10 +38,7 @@ export const Footer = () => {
             <Container className="py-12 md:py-16">
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-4">
-                        <Link href="/" className="flex items-center space-x-2">
-                            <GraduationCap className="h-8 w-8 text-primary" />
-                            <span className="text-xl font-bold">SkillBridge</span>
-                        </Link>
+                        <Logo />
                         <p className="max-w-xs text-sm text-muted-foreground leading-relaxed">
                             Empowering learners worldwide by connecting them with expert tutors. Master new skills at your own pace.
                         </p>
@@ -120,7 +117,7 @@ export const Footer = () => {
                 <Container>
                     <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                         <p className="text-xs text-muted-foreground">
-                            © 2026 SkillBridge. All rights reserved. Code with ❤️ by Student 60252.
+                            © 2026 SkillBridge. All rights reserved. Code with ❤️ by Student L2B60252.
                         </p>
                         <div className="flex gap-6 text-xs text-muted-foreground">
                             <Link href="/privacy" className="hover:text-foreground">Privacy</Link>

@@ -4,6 +4,10 @@ export interface User {
   name: string;
   role: "STUDENT" | "TUTOR" | "ADMIN";
   image?: string;
+  emailVerified?: boolean;
+  phone?: string;
+  bio?: string;
+  status?: string;
   createdAt: Date;
   updatedAt: Date;
   tutorProfile?: TutorProfile;
@@ -56,4 +60,32 @@ export interface Review {
   rating: number;
   comment?: string;
   createdAt: Date;
+}
+
+// Extended type for tutor display with additional UI fields
+export interface TutorData extends User {
+  headline?: string;
+  bio?: string;
+  subject?: string;
+  rating?: number;
+  reviews?: number;
+  rate?: number;
+  tags?: string[];
+  location?: string;
+  languages?: string[];
+  lessonsGiven?: number;
+  students?: number;
+  responseTime?: string;
+  education?: Array<{
+    degree: string;
+    school: string;
+    year: string;
+  }>;
+  reviewsList?: Array<{
+    id: number;
+    user: string;
+    rating: number;
+    date: string;
+    comment: string;
+  }>;
 }
