@@ -11,6 +11,7 @@ export interface StudentBooking {
   notes?: string;
   meetingLink?: string;
   createdAt: string;
+  subject: string; // Add subject field
   tutor: {
     id: string;
     hourlyRate: number;

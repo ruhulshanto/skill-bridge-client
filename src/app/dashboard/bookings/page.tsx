@@ -111,19 +111,28 @@ export default function MyBookingsPage() {
   const filteredBookings = bookings.filter(booking => {
     const matchesFilter = 
       filter === "all" || 
-      (filter === "upcoming" && (booking.status === "CONFIRMED")) ||
-      (filter === "completed" && booking.status === "COMPLETED") ||
+      (filter === "upcoming" && (booking.status === "CONFIRMED" && !isSessionTimePassed(booking))) ||
+      (filter === "completed" && (booking.status === "COMPLETED" || (booking.status === "CONFIRMED" && isSessionTimePassed(booking)))) ||
       (filter === "cancelled" && booking.status === "CANCELLED");
     
     const matchesSearch = 
       booking.tutor.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+      booking.subject.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesFilter && matchesSearch;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  // Get effective status (considering session time)
+  const getEffectiveStatus = (booking: StudentBooking): "CONFIRMED" | "COMPLETED" | "CANCELLED" => {
+    if (booking.status === "CONFIRMED" && isSessionTimePassed(booking)) {
+      return "COMPLETED";
+    }
+    return booking.status as "CONFIRMED" | "COMPLETED" | "CANCELLED";
+  };
+
+  const getStatusColor = (booking: StudentBooking): string => {
+    const effectiveStatus = getEffectiveStatus(booking);
+    switch (effectiveStatus) {
       case "CONFIRMED": return "bg-blue-100 text-blue-800";
       case "COMPLETED": return "bg-green-100 text-green-800";
       case "CANCELLED": return "bg-red-100 text-red-800";
@@ -131,8 +140,9 @@ export default function MyBookingsPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  const getStatusIcon = (booking: StudentBooking): React.ReactElement => {
+    const effectiveStatus = getEffectiveStatus(booking);
+    switch (effectiveStatus) {
       case "CONFIRMED": return <Calendar className="h-4 w-4" />;
       case "COMPLETED": return <Star className="h-4 w-4" />;
       case "CANCELLED": return <Clock className="h-4 w-4" />;
@@ -340,15 +350,15 @@ export default function MyBookingsPage() {
 
                   {/* Status and Actions */}
                   <div className="flex flex-col items-end gap-3">
-                    <Badge className={`${getStatusColor(booking.status)} flex items-center gap-1`}>
-                      {getStatusIcon(booking.status)}
-                      {booking.status}
+                    <Badge className={`${getStatusColor(booking)} flex items-center gap-1`}>
+                      {getStatusIcon(booking)}
+                      {getEffectiveStatus(booking)}
                     </Badge>
                     <div className="text-lg font-bold text-gray-900">
                       ${booking.totalAmount}
                     </div>
                     <div className="flex gap-2">
-                      {booking.status === "CONFIRMED" && (
+                      {getEffectiveStatus(booking) === "CONFIRMED" && (
                         <>
                           {booking.meetingLink && (
                             <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
