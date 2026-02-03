@@ -38,7 +38,7 @@ interface FormDataState {
 }
 
 export default function StudentProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -167,20 +167,27 @@ export default function StudentProfilePage() {
         return;
       }
 
-      // Update local state with the saved data
+      // Update global auth context to refresh sidebar info
       if (result.data) {
         const resultAny = result as any; // Temporarily cast to any to access nested data
         if (resultAny.data && resultAny.data.data) {
           const updatedData = resultAny.data.data as User;
           console.log("✅ Updated data from server:", updatedData);
-
+          
+          updateUser({
+            name: updatedData.name,
+            phone: updatedData.phone,
+            bio: updatedData.bio,
+            location: updatedData.location,
+          });
+          
           setUserProfile((prev: UserProfileState) => ({
             ...prev,
             bio: updatedData.bio || "",
             phone: updatedData.phone || "",
             location: updatedData.location || "",
           }));
-
+          
           setFormData((prev: FormDataState) => ({
             ...prev,
             name: updatedData.name || prev.name,
@@ -188,7 +195,7 @@ export default function StudentProfilePage() {
             phone: updatedData.phone || "",
             location: updatedData.location || "",
           }));
-
+          
           console.log("🔄 Local state updated");
         } else {
           console.log("⚠️ Save succeeded but no data returned, refreshing profile...");
