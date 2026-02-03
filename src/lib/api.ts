@@ -148,14 +148,14 @@ class ApiClient {
     endTime: string;
     notes?: string;
   }) {
-    return this.request('/bookings', {
+    return this.request('/api/bookings', {
       method: 'POST',
       body: JSON.stringify(bookingData),
     });
   }
 
   async getMyBookings() {
-    return this.request('/bookings/my');
+    return this.request('/api/bookings/my');
   }
 
   async updateBookingStatus(id: string, status: 'CONFIRMED' | 'COMPLETED' | 'CANCELLED') {
@@ -194,7 +194,7 @@ class ApiClient {
 
   // Categories endpoints
   async getCategories() {
-    return this.request('/categories');
+    return this.request('/api/categories');
   }
 
   // Admin profile endpoints
