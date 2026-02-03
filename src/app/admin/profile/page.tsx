@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { Mail, Phone, Calendar, Shield, User, Edit2, Save, X, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, Phone, Calendar, Shield, User, Edit2, Save, X, Clock, CheckCircle, AlertCircle, MapPin, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { apiClient } from "@/lib/api";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function AdminProfilePage() {
   const { user, checkAuth } = useAuth();
@@ -21,7 +22,10 @@ export default function AdminProfilePage() {
     name: "",
     email: "",
     phone: "",
+    bio: "",
+    location: "",
   });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -29,6 +33,8 @@ export default function AdminProfilePage() {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
+        bio: user.bio || "",
+        location: user.location || "",
       });
     }
   }, [user]);
@@ -44,6 +50,8 @@ export default function AdminProfilePage() {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
+        bio: user.bio || "",
+        location: user.location || "",
       });
     }
   };
@@ -56,6 +64,8 @@ export default function AdminProfilePage() {
       const updateData: any = {};
       if (formData.name !== user?.name) updateData.name = formData.name;
       if (formData.phone !== user?.phone) updateData.phone = formData.phone;
+      if (formData.bio !== user?.bio) updateData.bio = formData.bio;
+      if (formData.location !== user?.location) updateData.location = formData.location;
 
       if (Object.keys(updateData).length === 0) {
         toast({
@@ -69,10 +79,7 @@ export default function AdminProfilePage() {
       const response = await apiClient.updateAdminProfile(updateData);
       
       if (response.data) {
-        toast({
-          title: "Success",
-          description: "Profile updated successfully!",
-        });
+        setShowSuccessModal(true);
         
         // Refresh user data
         await checkAuth();
@@ -221,6 +228,31 @@ export default function AdminProfilePage() {
                     placeholder="Enter your phone number"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-sm font-medium text-gray-700">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange("location", e.target.value)}
+                    disabled={!isEditing}
+                    className={!isEditing ? "bg-gray-50 border-gray-200" : ""}
+                    placeholder="Enter your location"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bio" className="text-sm font-medium text-gray-700">Bio</Label>
+                  <textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => handleInputChange("bio", e.target.value)}
+                    disabled={!isEditing}
+                    className={!isEditing ? "bg-gray-50 border-gray-200" : "w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"}
+                    rows={3}
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
               </div>
             </div>
 
@@ -354,6 +386,51 @@ export default function AdminProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 mb-4">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-gray-900">Profile Updated!</DialogTitle>
+            <DialogDescription className="text-gray-600 mt-2">
+              Your admin profile has been successfully updated with the latest changes.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="mt-6 space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-sm text-green-800 font-medium">Changes saved successfully</p>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              <p className="text-sm text-blue-800">
+                {formData.location ? `Location: ${formData.location}` : "Location not specified"}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+              <FileText className="h-4 w-4 text-purple-600" />
+              <p className="text-sm text-purple-800">
+                {formData.bio ? "Bio updated" : "Bio not specified"}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-6 flex gap-3">
+            <Button 
+              onClick={() => setShowSuccessModal(false)}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium"
+            >
+              Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

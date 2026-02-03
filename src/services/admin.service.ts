@@ -220,6 +220,30 @@ const adminService = {
       throw new Error('Failed to delete category');
     }
   },
+
+  // Update admin profile
+  async updateAdminProfile(profileData: {
+    name?: string;
+    phone?: string;
+    bio?: string;
+    location?: string;
+  }) {
+    const response = await fetch(`${API_URL}/api/admin/profile`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update admin profile');
+    }
+
+    const data = await response.json();
+    return data;
+  },
 };
 
 export default adminService;

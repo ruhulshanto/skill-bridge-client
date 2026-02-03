@@ -218,6 +218,8 @@ class ApiClient {
   async updateAdminProfile(profileData: {
     name?: string;
     phone?: string;
+    bio?: string;
+    location?: string;
   }) {
     return this.request('/api/admin/profile', {
       method: 'PUT',
