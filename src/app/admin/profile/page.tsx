@@ -14,10 +14,11 @@ import { apiClient } from "@/lib/api";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function AdminProfilePage() {
-  const { user, checkAuth } = useAuth();
+  const { user, checkAuth, updateUser } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -59,13 +60,13 @@ export default function AdminProfilePage() {
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      
-      // Only send changed fields
+
+      // Only send changed fields (exclude empty strings)
       const updateData: any = {};
-      if (formData.name !== user?.name) updateData.name = formData.name;
-      if (formData.phone !== user?.phone) updateData.phone = formData.phone;
-      if (formData.bio !== user?.bio) updateData.bio = formData.bio;
-      if (formData.location !== user?.location) updateData.location = formData.location;
+      if (formData.name !== user?.name && formData.name.trim()) updateData.name = formData.name.trim();
+      if (formData.phone !== user?.phone && formData.phone.trim()) updateData.phone = formData.phone.trim();
+      if (formData.bio !== user?.bio && formData.bio.trim()) updateData.bio = formData.bio.trim();
+      if (formData.location !== user?.location && formData.location.trim()) updateData.location = formData.location.trim();
 
       if (Object.keys(updateData).length === 0) {
         toast({
@@ -76,14 +77,40 @@ export default function AdminProfilePage() {
         return;
       }
 
+      console.log("🔍 Updating admin profile with data:", updateData);
       const response = await apiClient.updateAdminProfile(updateData);
+      console.log("📊 API Response:", response);
       
-      if (response.data) {
-        setShowSuccessModal(true);
+      // Handle successful update even if response is empty
+      const responseAny = response as any;
+      if (response && (response.data || responseAny.status === 200 || responseAny.success)) {
+        // If API returns data, use it. Otherwise, use the form data we sent.
+        const updatedData = response.data || updateData;
         
-        // Refresh user data
-        await checkAuth();
+        // Update user in auth context with server response or form data
+        const updatedUser = {
+          ...user!,
+          ...updatedData,
+        };
+        
+        updateUser(updatedUser);
+        
+        // Update form state to match exactly what was saved
+        setFormData({
+          name: updatedData.name || user?.name || "",
+          email: user?.email || "",
+          phone: updatedData.phone || user?.phone || "",
+          bio: updatedData.bio || user?.bio || "",
+          location: updatedData.location || user?.location || "",
+        });
+        
+        // Force re-render
+        setRefreshKey(prev => prev + 1);
+        
+        setShowSuccessModal(true);
         setIsEditing(false);
+      } else {
+        throw new Error("No data returned from API");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -116,7 +143,7 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div key={refreshKey} className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -181,7 +208,7 @@ export default function AdminProfilePage() {
             </div>
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Personal Information */}
@@ -190,7 +217,7 @@ export default function AdminProfilePage() {
                 <User className="h-5 w-5 text-blue-600" />
                 Personal Information
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-medium text-gray-700">Full Name</Label>
@@ -262,7 +289,7 @@ export default function AdminProfilePage() {
                 <Shield className="h-5 w-5 text-blue-600" />
                 Account Details
               </h3>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
@@ -389,44 +416,63 @@ export default function AdminProfilePage() {
 
       {/* Success Modal */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 mb-4">
-              <CheckCircle className="h-8 w-8 text-white" />
+        <DialogContent className="sm:max-w-lg border-0 shadow-2xl">
+          <DialogHeader className="text-center pb-0">
+            <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-green-400 via-green-500 to-green-600 mb-6 shadow-lg">
+              <CheckCircle className="h-10 w-10 text-white" />
             </div>
-            <DialogTitle className="text-2xl font-bold text-gray-900">Profile Updated!</DialogTitle>
-            <DialogDescription className="text-gray-600 mt-2">
-              Your admin profile has been successfully updated with the latest changes.
+            <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+              Profile Updated!
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 mt-3 text-lg">
+              Your admin profile has been successfully updated
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-sm text-green-800 font-medium">Changes saved successfully</p>
+
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+              <div className="flex-shrink-0">
+                <div className="h-3 w-3 bg-green-500 rounded-full animate-pulse shadow-lg" />
+              </div>
+              <div>
+                <p className="text-green-800 font-semibold">All changes saved successfully</p>
+                <p className="text-green-600 text-sm">Your profile is up to date</p>
+              </div>
             </div>
-            
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              <p className="text-sm text-blue-800">
-                {formData.location ? `Location: ${formData.location}` : "Location not specified"}
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-              <FileText className="h-4 w-4 text-purple-600" />
-              <p className="text-sm text-purple-800">
-                {formData.bio ? "Bio updated" : "Bio not specified"}
-              </p>
-            </div>
+
+            {formData.location && (
+              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                <div>
+                  <p className="text-blue-800 font-medium">Location Updated</p>
+                  <p className="text-blue-600">{formData.location}</p>
+                </div>
+              </div>
+            )}
+
+            {formData.bio && (
+              <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                <FileText className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-purple-800 font-medium">Bio Updated</p>
+                  <p className="text-purple-600 text-sm truncate">{formData.bio}</p>
+                </div>
+              </div>
+            )}
+
+            {(!formData.location && !formData.bio) && (
+              <div className="text-center p-6 bg-gray-50 rounded-xl">
+                <p className="text-gray-500">Consider adding your location and bio to complete your profile</p>
+              </div>
+            )}
           </div>
-          
-          <div className="mt-6 flex gap-3">
-            <Button 
+
+          <div className="mt-8 flex gap-3">
+            <Button
               onClick={() => setShowSuccessModal(false)}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              Continue
+              Got it!
             </Button>
           </div>
         </DialogContent>
