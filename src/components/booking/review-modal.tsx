@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, X, MessageSquare } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { Star, X } from "lucide-react";
+import { apiClient } from "@/lib/api";
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -26,13 +26,12 @@ interface ReviewModalProps {
 }
 
 export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitted }: ReviewModalProps) {
-  const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredStar, setHoveredStar] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     
     if (rating === 0) {
@@ -43,26 +42,18 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000'}/api/reviews`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          bookingId: booking.id,
-          rating,
-          comment: comment.trim() || undefined,
-        }),
+      const result = await apiClient.createReview({
+        bookingId: booking.id,
+        rating,
+        comment: comment.trim() || undefined,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to submit review');
+      if (result.error) {
+        alert(result.error.message || "Failed to submit review");
+        return;
       }
 
-      const data = await response.json();
-      console.log("Review submitted successfully:", data);
+      console.log("Review submitted successfully:");
       
       alert("Review submitted successfully!");
       setRating(0);

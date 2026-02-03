@@ -1,4 +1,5 @@
 import { API_URL } from '@/config/api';
+import { apiClient } from '@/lib/api';
 
 export interface StudentBooking {
   id: string;
@@ -354,21 +355,14 @@ const studentService = {
     rating: number;
     comment: string;
   }): Promise<void> {
-    const response = await fetch(`${API_URL}/api/reviews`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        bookingId,
-        rating: review.rating,
-        comment: review.comment,
-      }),
+    const result = await apiClient.createReview({
+      bookingId,
+      rating: review.rating,
+      comment: review.comment,
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to leave review');
+    if (result.error) {
+      throw new Error(result.error.message || 'Failed to leave review');
     }
   },
 
