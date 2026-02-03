@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { Mail, Phone, Calendar, Shield, User, Edit2, Save, X, Clock, CheckCircle, AlertCircle, MapPin, FileText, Sparkles, Check } from "lucide-react";
+import { Mail, Phone, Shield, User, Edit2, Save, X, Clock, CheckCircle, MapPin, Sparkles, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { apiClient } from "@/lib/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -110,24 +110,31 @@ export default function AdminProfilePage() {
 
       const responseAny = response as any;
       if (responseAny && (responseAny.data || responseAny.status === 200)) {
-        const updatedData = responseAny.data?.data || responseAny.data || updateData;
+        // Correctly handle nested data based on inspect log { data: { data: { ... } } }
+        const serverData = responseAny.data?.data || responseAny.data;
+
+        // Final fallback to updateData if server returns nothing
+        const finalData = serverData || updateData;
+
+        console.log("✅ Final data to update:", finalData);
 
         // IMPORTANT: Update local user state immediately for dynamic UI update
-        // We ensure ALL fields are passed to updateUser to sync with sidebar/header
-        const newUserData = {
-          ...user!,
-          ...updatedData,
-        };
-
-        console.log("✅ Updating Auth Context with:", newUserData);
-        updateUser(newUserData);
+        // We MUST use the spread operator to trigger a new object reference
+        updateUser({
+          ...user,
+          ...finalData,
+          name: finalData.name || user?.name || "",
+          phone: finalData.phone || user?.phone || "",
+          bio: finalData.bio || user?.bio || "",
+          location: finalData.location || user?.location || "",
+        });
 
         // Show success modal
         setShowSuccessModal(true);
         setIsEditing(false);
 
-        // Optional: background sync to ensure session is updated
-        setTimeout(() => checkAuth(), 1000);
+        // DO NOT call checkAuth() immediately as it might fetch cached stale session
+        // Instead, we just trust the updateUser call which refreshes all context consumers
       } else {
         throw new Error("Failed to update profile");
       }
@@ -217,7 +224,7 @@ export default function AdminProfilePage() {
         {/* Left Column - Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           <Card className="overflow-hidden border-0 shadow-2xl rounded-3xl bg-white">
-            <div className="h-32 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative">
+            <div className="h-32 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 relative">
               <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
               <div className="absolute top-4 right-4 text-white/50">
                 <Shield className="h-12 w-12" />
