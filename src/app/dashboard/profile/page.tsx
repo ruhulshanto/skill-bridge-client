@@ -9,10 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { User, Mail, Shield, Camera, Edit3, Save, Bell, Lock, Globe, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function StudentProfilePage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [userProfile, setUserProfile] = useState({
     bio: "Passionate learner focused on web development and data science. Always eager to expand my knowledge and skills.",
     phone: "+1 (555) 123-4567",
@@ -61,10 +65,41 @@ export default function StudentProfilePage() {
     });
   }, [user?.id]);
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log("Saving profile:", formData);
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Update user profile using apiClient
+      const result = await apiClient.updateAdminProfile({
+        name: formData.name,
+        phone: formData.phone,
+      });
+
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error.message || "Failed to update profile",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local user data if needed
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+      
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -342,9 +377,9 @@ export default function StudentProfilePage() {
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button onClick={handleSave} disabled={isLoading} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                 <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                {isLoading ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           )}
