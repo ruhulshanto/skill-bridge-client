@@ -215,6 +215,10 @@ class ApiClient {
   }
 
   // Admin profile endpoints
+  async getAdminProfile(): Promise<ApiResponse<User>> {
+    return this.request('/api/admin/profile');
+  }
+
   async updateAdminProfile(profileData: {
     name?: string;
     phone?: string;
