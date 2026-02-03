@@ -7,17 +7,42 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Mail, Shield, Camera, Edit3, Save, Bell, Lock, Globe, CreditCard } from "lucide-react";
+import { User as UserIcon, Mail, Shield, Camera, Edit3, Save, Bell, Lock, Globe, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
+import { User } from "@/types";
+
+interface UserProfileState {
+  bio: string;
+  phone: string;
+  location: string;
+  timezone: string;
+  language: string;
+  notifications: boolean;
+  twoFactor: boolean;
+  memberSince: string;
+  lastActive: string;
+}
+
+interface FormDataState {
+  name: string;
+  email: string;
+  bio: string;
+  phone: string;
+  location: string;
+  timezone: string;
+  language: string;
+  notifications: boolean;
+  twoFactor: boolean;
+}
 
 export default function StudentProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState({
+  const [userProfile, setUserProfile] = useState<UserProfileState>({
     bio: "",
     phone: "",
     location: "",
@@ -29,16 +54,16 @@ export default function StudentProfilePage() {
     lastActive: "",
   });
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataState>({
     name: "",
     email: "",
-    bio: userProfile.bio,
-    phone: userProfile.phone,
-    location: userProfile.location,
-    timezone: userProfile.timezone,
-    language: userProfile.language,
-    notifications: userProfile.notifications,
-    twoFactor: userProfile.twoFactor,
+    bio: "",
+    phone: "",
+    location: "",
+    timezone: "GMT (UTC+0)",
+    language: "English",
+    notifications: true,
+    twoFactor: false,
   });
 
   useEffect(() => {
@@ -47,14 +72,14 @@ export default function StudentProfilePage() {
     // Fetch actual user profile data from backend
     const fetchProfile = async () => {
       try {
-        const result = await apiClient.getMe();
+        const result = await apiClient.getStudentProfile();
         if (result.data) {
-          const userData = result.data;
+          const userData = result.data as User;
           const profileData = {
             bio: userData.bio || "",
             phone: userData.phone || "",
-            location: "", // Not available in User type
-            timezone: "", // Not available in User type
+            location: userData.location || "",
+            timezone: "GMT (UTC+0)", // Default
             language: "English", // Default
             notifications: true, // Default
             twoFactor: false, // Default
@@ -75,8 +100,8 @@ export default function StudentProfilePage() {
         const fallbackData = {
           bio: user?.bio || "",
           phone: user?.phone || "",
-          location: "",
-          timezone: "",
+          location: user?.location || "",
+          timezone: "GMT (UTC+0)",
           language: "English",
           notifications: true,
           twoFactor: false,
@@ -98,12 +123,14 @@ export default function StudentProfilePage() {
 
   const handleSave = async () => {
     setIsLoading(true);
-    
+
     try {
       // Update user profile using apiClient
-      const result = await apiClient.updateAdminProfile({
+      const result = await apiClient.updateStudentProfile({
         name: formData.name,
         phone: formData.phone,
+        bio: formData.bio,
+        location: formData.location,
       });
 
       if (result.error) {
@@ -115,12 +142,31 @@ export default function StudentProfilePage() {
         return;
       }
 
-      // Update local user data if needed
+      // Update local state with the saved data
+      if (result.data) {
+        const updatedData = result.data as User;
+        
+        setUserProfile((prev: UserProfileState) => ({
+          ...prev,
+          bio: updatedData.bio || "",
+          phone: updatedData.phone || "",
+          location: updatedData.location || "",
+        }));
+        
+        setFormData((prev: FormDataState) => ({
+          ...prev,
+          name: updatedData.name || prev.name,
+          bio: updatedData.bio || "",
+          phone: updatedData.phone || "",
+          location: updatedData.location || "",
+        }));
+      }
+
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-      
+
       setIsEditing(false);
     } catch (error) {
       toast({
@@ -137,13 +183,13 @@ export default function StudentProfilePage() {
     setFormData({
       name: user?.name || "",
       email: user?.email || "",
-      bio: userProfile.bio,
-      phone: userProfile.phone,
-      location: userProfile.location,
-      timezone: userProfile.timezone,
-      language: userProfile.language,
-      notifications: userProfile.notifications,
-      twoFactor: userProfile.twoFactor,
+      bio: userProfile.bio || "",
+      phone: userProfile.phone || "",
+      location: userProfile.location || "",
+      timezone: userProfile.timezone || "GMT (UTC+0)",
+      language: userProfile.language || "English",
+      notifications: userProfile.notifications !== false,
+      twoFactor: userProfile.twoFactor !== false,
     });
     setIsEditing(false);
   };
@@ -253,7 +299,7 @@ export default function StudentProfilePage() {
             <div className="h-1 bg-gradient-to-r from-purple-500 to-indigo-600" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-purple-600" />
+                <UserIcon className="h-5 w-5 text-purple-600" />
                 Personal Information
               </CardTitle>
               <CardDescription>Update your personal details and contact information</CardDescription>
@@ -277,8 +323,8 @@ export default function StudentProfilePage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    disabled={!isEditing}
-                    className="mt-1"
+                    disabled={true} // Always disabled - email cannot be changed
+                    className="mt-1 bg-gray-50"
                   />
                 </div>
                 <div>

@@ -197,6 +197,23 @@ class ApiClient {
     return this.request('/api/categories');
   }
 
+  // Student profile endpoints
+  async getStudentProfile(): Promise<ApiResponse<User>> {
+    return this.request('/api/student/profile');
+  }
+
+  async updateStudentProfile(profileData: {
+    name?: string;
+    phone?: string;
+    bio?: string;
+    location?: string;
+  }) {
+    return this.request('/api/student/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
   // Admin profile endpoints
   async updateAdminProfile(profileData: {
     name?: string;

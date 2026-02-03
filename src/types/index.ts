@@ -7,6 +7,7 @@ export interface User {
   emailVerified?: boolean;
   phone?: string;
   bio?: string;
+  location?: string;
   status?: string;
   createdAt: Date;
   updatedAt: Date;
