@@ -76,8 +76,9 @@ export default function StudentProfilePage() {
         const result = await apiClient.getStudentProfile();
         console.log("📊 API Response:", result);
         
-        if (result.data) {
-          const userData = result.data as User;
+        const resultAny = result as any; // Temporarily cast to any to access nested data
+        if (resultAny.data && resultAny.data.data) {
+          const userData = resultAny.data.data as User; // Fix: Access nested data
           console.log("👤 User data from DB:", userData);
           
           const profileData = {
@@ -168,25 +169,28 @@ export default function StudentProfilePage() {
 
       // Update local state with the saved data
       if (result.data) {
-        const updatedData = result.data as User;
-        console.log("✅ Updated data from server:", updatedData);
-        
-        setUserProfile((prev: UserProfileState) => ({
-          ...prev,
-          bio: updatedData.bio || "",
-          phone: updatedData.phone || "",
-          location: updatedData.location || "",
-        }));
-        
-        setFormData((prev: FormDataState) => ({
-          ...prev,
-          name: updatedData.name || prev.name,
-          bio: updatedData.bio || "",
-          phone: updatedData.phone || "",
-          location: updatedData.location || "",
-        }));
-        
-        console.log("🔄 Local state updated");
+        const resultAny = result as any; // Temporarily cast to any to access nested data
+        if (resultAny.data && resultAny.data.data) {
+          const updatedData = resultAny.data.data as User;
+          console.log("✅ Updated data from server:", updatedData);
+          
+          setUserProfile((prev: UserProfileState) => ({
+            ...prev,
+            bio: updatedData.bio || "",
+            phone: updatedData.phone || "",
+            location: updatedData.location || "",
+          }));
+          
+          setFormData((prev: FormDataState) => ({
+            ...prev,
+            name: updatedData.name || prev.name,
+            bio: updatedData.bio || "",
+            phone: updatedData.phone || "",
+            location: updatedData.location || "",
+          }));
+          
+          console.log("🔄 Local state updated");
+        }
       }
 
       toast({
