@@ -72,9 +72,14 @@ export default function StudentProfilePage() {
     // Fetch actual user profile data from backend
     const fetchProfile = async () => {
       try {
+        console.log("🔍 Fetching student profile...");
         const result = await apiClient.getStudentProfile();
+        console.log("📊 API Response:", result);
+        
         if (result.data) {
           const userData = result.data as User;
+          console.log("👤 User data from DB:", userData);
+          
           const profileData = {
             bio: userData.bio || "",
             phone: userData.phone || "",
@@ -87,16 +92,24 @@ export default function StudentProfilePage() {
             lastActive: userData.updatedAt ? new Date(userData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
           };
 
+          console.log("📝 Profile data to set:", profileData);
           setUserProfile(profileData);
-          setFormData({
+          
+          const formDataToSet = {
             name: userData.name || "",
             email: userData.email || "",
             ...profileData,
-          });
+          };
+          console.log("📋 Form data to set:", formDataToSet);
+          setFormData(formDataToSet);
+        } else {
+          console.log("❌ No data in API response");
         }
       } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        console.error("💥 Failed to fetch profile:", error);
         // Fallback to user data from auth context
+        console.log("🔄 Using fallback data from auth context:", user);
+        
         const fallbackData = {
           bio: user?.bio || "",
           phone: user?.phone || "",
@@ -109,6 +122,7 @@ export default function StudentProfilePage() {
           lastActive: user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
         };
 
+        console.log("📝 Fallback profile data:", fallbackData);
         setUserProfile(fallbackData);
         setFormData({
           name: user?.name || "",
@@ -123,8 +137,15 @@ export default function StudentProfilePage() {
 
   const handleSave = async () => {
     setIsLoading(true);
-
+    
     try {
+      console.log("💾 Saving profile with data:", {
+        name: formData.name,
+        phone: formData.phone,
+        bio: formData.bio,
+        location: formData.location,
+      });
+      
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
@@ -133,7 +154,10 @@ export default function StudentProfilePage() {
         location: formData.location,
       });
 
+      console.log("📊 Save API Response:", result);
+
       if (result.error) {
+        console.error("❌ Save error:", result.error);
         toast({
           title: "Error",
           description: result.error.message || "Failed to update profile",
@@ -145,6 +169,7 @@ export default function StudentProfilePage() {
       // Update local state with the saved data
       if (result.data) {
         const updatedData = result.data as User;
+        console.log("✅ Updated data from server:", updatedData);
         
         setUserProfile((prev: UserProfileState) => ({
           ...prev,
@@ -160,15 +185,18 @@ export default function StudentProfilePage() {
           phone: updatedData.phone || "",
           location: updatedData.location || "",
         }));
+        
+        console.log("🔄 Local state updated");
       }
 
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-
+      
       setIsEditing(false);
     } catch (error) {
+      console.error("💥 Save error:", error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
