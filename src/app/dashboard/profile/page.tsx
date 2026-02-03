@@ -150,9 +150,9 @@ export default function StudentProfilePage() {
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
-        phone: formData.phone,
-        bio: formData.bio,
-        location: formData.location,
+        phone: formData.phone || null, // Send null if empty
+        bio: formData.bio || null, // Send null if empty
+        location: formData.location || null, // Send null if empty
       });
 
       console.log("📊 Save API Response:", result);
@@ -190,6 +190,12 @@ export default function StudentProfilePage() {
           }));
           
           console.log("🔄 Local state updated");
+        } else {
+          console.log("⚠️ Save succeeded but no data returned, refreshing profile...");
+          // Refresh profile data after successful save
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       }
 
