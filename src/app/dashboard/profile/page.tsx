@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/types";
+import { CheckCircle, X } from "lucide-react";
 
 interface UserProfileState {
   bio: string;
@@ -42,6 +43,7 @@ export default function StudentProfilePage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfileState>({
     bio: "",
     phone: "",
@@ -206,11 +208,8 @@ export default function StudentProfilePage() {
         }
       }
 
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-
+      setShowSuccessModal(true);
+      
       setIsEditing(false);
     } catch (error) {
       console.error("💥 Save error:", error);
@@ -508,6 +507,56 @@ export default function StudentProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-slide-up">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Updated Successfully!</h3>
+              <p className="text-gray-600 mb-6">
+                Your profile information has been updated and saved successfully.
+              </p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                <h4 className="font-semibold text-gray-900 mb-2">Updated Information:</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Name:</span>
+                    <span className="font-medium text-gray-900">{formData.name}</span>
+                  </div>
+                  {formData.phone && (
+                    <div className="flex justify-between">
+                      <span>Phone:</span>
+                      <span className="font-medium text-gray-900">{formData.phone}</span>
+                    </div>
+                  )}
+                  {formData.bio && (
+                    <div className="flex justify-between">
+                      <span>Bio:</span>
+                      <span className="font-medium text-gray-900 truncate ml-2">{formData.bio}</span>
+                    </div>
+                  )}
+                  {formData.location && (
+                    <div className="flex justify-between">
+                      <span>Location:</span>
+                      <span className="font-medium text-gray-900">{formData.location}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <Button 
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+              >
+                Got it!
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
