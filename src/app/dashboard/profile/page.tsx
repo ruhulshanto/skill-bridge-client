@@ -150,9 +150,9 @@ export default function StudentProfilePage() {
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
-        phone: formData.phone || null, // Send null if empty
-        bio: formData.bio || null, // Send null if empty
-        location: formData.location || null, // Send null if empty
+        phone: formData.phone || undefined, // Send undefined if empty
+        bio: formData.bio || undefined, // Send undefined if empty
+        location: formData.location || undefined, // Send undefined if empty
       });
 
       console.log("📊 Save API Response:", result);
