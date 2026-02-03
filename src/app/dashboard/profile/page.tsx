@@ -18,15 +18,15 @@ export default function StudentProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userProfile, setUserProfile] = useState({
-    bio: "Passionate learner focused on web development and data science. Always eager to expand my knowledge and skills.",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
-    timezone: "PST (UTC-8)",
+    bio: "",
+    phone: "",
+    location: "",
+    timezone: "",
     language: "English",
     notifications: true,
     twoFactor: false,
-    memberSince: "January 2024",
-    lastActive: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    memberSince: "",
+    lastActive: "",
   });
 
   const [formData, setFormData] = useState({
@@ -44,25 +44,56 @@ export default function StudentProfilePage() {
   useEffect(() => {
     if (!user) return;
 
-    // Initialize profile data based on user from auth context
-    const profileData = {
-      bio: "Passionate learner focused on web development and data science. Always eager to expand my knowledge and skills.",
-      phone: "+1 (555) 123-4567",
-      location: "San Francisco, CA",
-      timezone: "PST (UTC-8)",
-      language: "English",
-      notifications: true,
-      twoFactor: false,
-      memberSince: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "January 2024",
-      lastActive: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    // Fetch actual user profile data from backend
+    const fetchProfile = async () => {
+      try {
+        const result = await apiClient.getMe();
+        if (result.data) {
+          const userData = result.data;
+          const profileData = {
+            bio: userData.bio || "",
+            phone: userData.phone || "",
+            location: "", // Not available in User type
+            timezone: "", // Not available in User type
+            language: "English", // Default
+            notifications: true, // Default
+            twoFactor: false, // Default
+            memberSince: userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "",
+            lastActive: userData.updatedAt ? new Date(userData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
+          };
+
+          setUserProfile(profileData);
+          setFormData({
+            name: userData.name || "",
+            email: userData.email || "",
+            ...profileData,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        // Fallback to user data from auth context
+        const fallbackData = {
+          bio: user?.bio || "",
+          phone: user?.phone || "",
+          location: "",
+          timezone: "",
+          language: "English",
+          notifications: true,
+          twoFactor: false,
+          memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "",
+          lastActive: user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
+        };
+
+        setUserProfile(fallbackData);
+        setFormData({
+          name: user?.name || "",
+          email: user?.email || "",
+          ...fallbackData,
+        });
+      }
     };
 
-    setUserProfile(profileData);
-    setFormData({
-      name: user.name || "",
-      email: user.email || "",
-      ...profileData,
-    });
+    fetchProfile();
   }, [user?.id]);
 
   const handleSave = async () => {
