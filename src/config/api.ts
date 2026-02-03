@@ -1,4 +1,4 @@
-// Use same-origin for API calls to leverage Next.js rewrites and authentication
+// Use Vercel backend URL for development
 export const API_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:5000' 
+  ? 'https://skill-bridge-server-five.vercel.app' // Replace with your actual Vercel URL
   : ''; // Empty string for production to use same-origin

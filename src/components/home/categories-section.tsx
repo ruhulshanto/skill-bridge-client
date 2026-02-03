@@ -19,7 +19,7 @@ export default function CategoriesSection() {
             <Container>
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
                     <div>
-                        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Explore Categories</h2>
+                        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4 text-blue-500">Explore Categories</h2>
                         <p className="text-lg text-muted-foreground max-w-2xl">
                             Find the perfect tutor for any subject you want to master.
                         </p>

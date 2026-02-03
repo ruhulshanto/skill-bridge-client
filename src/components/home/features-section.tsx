@@ -56,7 +56,7 @@ export default function FeaturesSection() {
                         <Star className="h-4 w-4" />
                         Trusted by 10,000+ Students
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-blue-500">
                         Why Choose SkillBridge?
                     </h2>
                     <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">

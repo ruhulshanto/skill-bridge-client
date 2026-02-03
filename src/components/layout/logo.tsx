@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
@@ -18,49 +19,29 @@ export const Logo = ({
 }: LogoProps) => {
     return (
         <Link href="/" className={cn("group flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-95", className)}>
-            {/* Logo Symbol */}
+            {/* Logo Image - Slim & Integrated */}
             <div className="relative flex-shrink-0">
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 blur-sm group-hover:from-blue-500/30 group-hover:to-purple-500/30 transition-all" />
-
-                {/* Main logo container */}
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all">
-                    {/* Bridge icon */}
-                    <svg
-                        className="h-6 w-6 text-white"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        {/* Bridge structure */}
-                        <path d="M2 12L4 12M20 12L22 12M12 2V22M4 12V16M20 12V16"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                        {/* Bridge cables/connections */}
-                        <path d="M4 16L12 8L20 16"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                        <path d="M4 8L12 16L20 8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-
-                    {/* Subtle shine effect */}
-                    <div className="absolute top-1 left-1 h-2 w-2 rounded-full bg-white/20 blur-sm" />
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-xl shadow-xl shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/35 transition-all duration-300">
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
+                    <Image
+                        src="https://i.ibb.co.com/JFs6zhXY/logo.png"
+                        alt="SkillBridge Logo"
+                        width={100}
+                        height={100}
+                        priority
+                        unoptimized={true}
+                        className="w-8 h-8 object-contain opacity-90"
+                    />
                 </div>
             </div>
 
             {/* Logo Text */}
             {!collapsed && (
                 <div className="flex flex-col overflow-hidden whitespace-nowrap">
-                    <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-200 dark:to-white bg-clip-text text-transparent">
+                    <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                         {title}
                     </span>
-                    <span className="text-[10px] font-medium tracking-wider text-blue-600 dark:text-blue-400 opacity-80 uppercase">
+                    <span className="text-[10px] font-medium tracking-wider text-blue-500 dark:text-blue-400 opacity-80 uppercase">
                         {subtitle}
                     </span>
                 </div>
