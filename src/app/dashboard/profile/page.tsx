@@ -75,12 +75,12 @@ export default function StudentProfilePage() {
         console.log("🔍 Fetching student profile...");
         const result = await apiClient.getStudentProfile();
         console.log("📊 API Response:", result);
-        
+
         const resultAny = result as any; // Temporarily cast to any to access nested data
         if (resultAny.data && resultAny.data.data) {
           const userData = resultAny.data.data as User; // Fix: Access nested data
           console.log("👤 User data from DB:", userData);
-          
+
           const profileData = {
             bio: userData.bio || "",
             phone: userData.phone || "",
@@ -95,7 +95,7 @@ export default function StudentProfilePage() {
 
           console.log("📝 Profile data to set:", profileData);
           setUserProfile(profileData);
-          
+
           const formDataToSet = {
             name: userData.name || "",
             email: userData.email || "",
@@ -110,7 +110,7 @@ export default function StudentProfilePage() {
         console.error("💥 Failed to fetch profile:", error);
         // Fallback to user data from auth context
         console.log("🔄 Using fallback data from auth context:", user);
-        
+
         const fallbackData = {
           bio: user?.bio || "",
           phone: user?.phone || "",
@@ -138,7 +138,7 @@ export default function StudentProfilePage() {
 
   const handleSave = async () => {
     setIsLoading(true);
-    
+
     try {
       console.log("💾 Saving profile with data:", {
         name: formData.name,
@@ -146,13 +146,13 @@ export default function StudentProfilePage() {
         bio: formData.bio,
         location: formData.location,
       });
-      
+
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
-        phone: formData.phone || undefined, // Send undefined if empty
-        bio: formData.bio || undefined, // Send undefined if empty
-        location: formData.location || undefined, // Send undefined if empty
+        phone: formData.phone || null as any, // Send null if empty to clear it in DB
+        bio: formData.bio || null as any,
+        location: formData.location || null as any,
       });
 
       console.log("📊 Save API Response:", result);
@@ -173,14 +173,14 @@ export default function StudentProfilePage() {
         if (resultAny.data && resultAny.data.data) {
           const updatedData = resultAny.data.data as User;
           console.log("✅ Updated data from server:", updatedData);
-          
+
           setUserProfile((prev: UserProfileState) => ({
             ...prev,
             bio: updatedData.bio || "",
             phone: updatedData.phone || "",
             location: updatedData.location || "",
           }));
-          
+
           setFormData((prev: FormDataState) => ({
             ...prev,
             name: updatedData.name || prev.name,
@@ -188,7 +188,7 @@ export default function StudentProfilePage() {
             phone: updatedData.phone || "",
             location: updatedData.location || "",
           }));
-          
+
           console.log("🔄 Local state updated");
         } else {
           console.log("⚠️ Save succeeded but no data returned, refreshing profile...");
@@ -203,7 +203,7 @@ export default function StudentProfilePage() {
         title: "Success",
         description: "Profile updated successfully",
       });
-      
+
       setIsEditing(false);
     } catch (error) {
       console.error("💥 Save error:", error);
@@ -241,10 +241,11 @@ export default function StudentProfilePage() {
           <p className="text-gray-600 mt-1">Manage your account information and preferences</p>
         </div>
         <Button
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
           className={isEditing ? "bg-gray-600 hover:bg-gray-700" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"}
+          disabled={isLoading}
         >
-          {isEditing ? (
+          {isLoading ? "Saving..." : isEditing ? (
             <>
               <Save className="h-4 w-4 mr-2" />
               Save Changes
