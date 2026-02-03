@@ -15,7 +15,9 @@ import { User } from "@/types";
 import { CheckCircle, X } from "lucide-react";
 
 interface UserProfileState {
+  bio: string;
   phone: string;
+  location: string;
   timezone: string;
   language: string;
   notifications: boolean;
@@ -27,7 +29,9 @@ interface UserProfileState {
 interface FormDataState {
   name: string;
   email: string;
+  bio: string;
   phone: string;
+  location: string;
   timezone: string;
   language: string;
   notifications: boolean;
@@ -41,7 +45,9 @@ export default function StudentProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfileState>({
+    bio: "",
     phone: "",
+    location: "",
     timezone: "",
     language: "English",
     notifications: true,
@@ -53,7 +59,9 @@ export default function StudentProfilePage() {
   const [formData, setFormData] = useState<FormDataState>({
     name: "",
     email: "",
+    bio: "",
     phone: "",
+    location: "",
     timezone: "GMT (UTC+0)",
     language: "English",
     notifications: true,
@@ -76,7 +84,9 @@ export default function StudentProfilePage() {
           console.log("👤 User data from DB:", userData);
           
           const profileData = {
+            bio: userData.bio || "",
             phone: userData.phone || "",
+            location: userData.location || "",
             timezone: "GMT (UTC+0)", // Default
             language: "English", // Default
             notifications: true, // Default
@@ -104,7 +114,9 @@ export default function StudentProfilePage() {
         console.log("🔄 Using fallback data from auth context:", user);
         
         const fallbackData = {
+          bio: user?.bio || "",
           phone: user?.phone || "",
+          location: user?.location || "",
           timezone: "GMT (UTC+0)",
           language: "English",
           notifications: true,
@@ -133,12 +145,16 @@ export default function StudentProfilePage() {
       console.log("💾 Saving profile with data:", {
         name: formData.name,
         phone: formData.phone,
+        bio: formData.bio,
+        location: formData.location,
       });
       
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
         phone: formData.phone || null as any, // Send null if empty to clear it in DB
+        bio: formData.bio || null as any,
+        location: formData.location || null as any,
       });
 
       console.log("📊 Save API Response:", result);
@@ -163,17 +179,23 @@ export default function StudentProfilePage() {
           updateUser({
             name: updatedData.name,
             phone: updatedData.phone,
+            bio: updatedData.bio,
+            location: updatedData.location,
           });
           
           setUserProfile((prev: UserProfileState) => ({
             ...prev,
+            bio: updatedData.bio || "",
             phone: updatedData.phone || "",
+            location: updatedData.location || "",
           }));
           
           setFormData((prev: FormDataState) => ({
             ...prev,
             name: updatedData.name || prev.name,
+            bio: updatedData.bio || "",
             phone: updatedData.phone || "",
+            location: updatedData.location || "",
           }));
           
           console.log("🔄 Local state updated");
@@ -205,7 +227,9 @@ export default function StudentProfilePage() {
     setFormData({
       name: user?.name || "",
       email: user?.email || "",
+      bio: userProfile.bio || "",
       phone: userProfile.phone || "",
+      location: userProfile.location || "",
       timezone: userProfile.timezone || "GMT (UTC+0)",
       language: userProfile.language || "English",
       notifications: userProfile.notifications !== false,
@@ -358,6 +382,28 @@ export default function StudentProfilePage() {
                     className="mt-1"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    disabled={!isEditing}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  disabled={!isEditing}
+                  className="mt-1"
+                  rows={4}
+                  placeholder="Tell us about yourself..."
+                />
               </div>
             </CardContent>
           </Card>
@@ -480,14 +526,20 @@ export default function StudentProfilePage() {
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="flex justify-between">
                     <span>Name:</span>
-                    <span className="font-medium text-gray-900">{formData.name}</span>
+                    <span className="font-medium text-gray-900">{formData.name || "Not provided"}</span>
                   </div>
-                  {formData.phone && (
-                    <div className="flex justify-between">
-                      <span>Phone:</span>
-                      <span className="font-medium text-gray-900">{formData.phone}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span>Phone:</span>
+                    <span className="font-medium text-gray-900">{formData.phone || "Not provided"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Location:</span>
+                    <span className="font-medium text-gray-900">{formData.location || "Not provided"}</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span>Bio:</span>
+                    <span className="font-medium text-gray-900 truncate ml-2 max-w-[200px]">{formData.bio || "Not provided"}</span>
+                  </div>
                 </div>
               </div>
               <Button 
