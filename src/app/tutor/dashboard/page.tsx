@@ -73,40 +73,32 @@ export default function TutorDashboardPage() {
       description: "View and manage your tutoring sessions",
       icon: Calendar,
       href: "/tutor/sessions",
-      color: "from-blue-500 to-blue-600",
       count: stats?.totalSessions || 0,
       countLabel: "Total",
-      badgeColor: "bg-blue-100 text-blue-800"
     },
     {
       title: "Set Availability",
       description: "Manage your weekly availability schedule",
       icon: Clock,
       href: "/tutor/availability",
-      color: "from-green-500 to-green-600",
       count: "24/7",
       countLabel: "Flexible",
-      badgeColor: "bg-green-100 text-green-800"
     },
     {
       title: "My Students",
       description: "View your students and their progress",
       icon: Users,
       href: "/tutor/students",
-      color: "from-purple-500 to-purple-600",
-      count: 0, // Will be updated when totalStudents is added to TutorStats
+      count: 0,
       countLabel: "Students",
-      badgeColor: "bg-purple-100 text-purple-800"
     },
     {
       title: "Profile Settings",
       description: "Edit your tutor profile and subjects",
       icon: Award,
       href: "/tutor/profile",
-      color: "from-orange-500 to-orange-600",
       count: "100%",
       countLabel: "Complete",
-      badgeColor: "bg-orange-100 text-orange-800"
     }
   ];
 
@@ -149,171 +141,157 @@ export default function TutorDashboardPage() {
 
       {/* Quick Actions Grid */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 text-gray-900">Quick Actions</h2>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Quick Actions</h2>
+          <div className="h-px flex-1 bg-gray-100 mx-6 hidden md:block" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((action, index) => (
-            <Card key={index} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg overflow-hidden">
-              <div className={`h-1 bg-gradient-to-r ${action.color}`} />
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${action.color} text-white shadow-lg`}>
-                    <action.icon className="h-6 w-6" />
+            <Link href={action.href} key={index} className="group">
+              <Card className="h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-600" />
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                      <action.icon className="h-5 w-5" />
+                    </div>
+                    <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                      {action.count} {action.countLabel}
+                    </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${action.badgeColor}`}>
-                    {action.count}
+                  <CardTitle className="text-lg font-bold text-gray-900 mt-4 group-hover:text-blue-600 transition-colors">{action.title}</CardTitle>
+                  <CardDescription className="text-sm text-gray-500 line-clamp-2">{action.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
+                    <span>Manage</span>
+                    <TrendingUp className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </div>
-                <CardTitle className="text-lg font-bold text-gray-900 mt-4">{action.title}</CardTitle>
-                <CardDescription className="text-gray-600">{action.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Button asChild className={`w-full bg-gradient-to-r ${action.color} hover:shadow-lg transition-all duration-300 hover:scale-105 text-white border-0`}>
-                  <Link href={action.href}>
-                    Get Started
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* Enhanced Recent Sessions & Performance Metrics */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-3">
         {/* Recent Sessions */}
-        <Card className="shadow-xl border-0 overflow-hidden hover:shadow-2xl transition-all duration-300">
-          <div className="h-2 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600" />
-          <CardHeader className="pb-6">
+        <Card className="lg:col-span-2 border-0 shadow-xl shadow-blue-500/5 bg-white/50 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
+          <CardHeader className="border-b border-gray-50 pb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 shadow-inner">
                   <Clock className="h-6 w-6" />
                 </div>
                 <div>
                   <CardTitle className="text-xl font-bold text-gray-900">Recent Sessions</CardTitle>
-                  <CardDescription className="text-gray-600 mt-1">Your latest tutoring sessions</CardDescription>
+                  <CardDescription className="text-gray-500">Monitor your active learning sessions</CardDescription>
                 </div>
               </div>
-              <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                Live
-              </div>
+              <Link href="/tutor/sessions">
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-semibold transition-colors">
+                  View All
+                </Button>
+              </Link>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-8">
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl animate-pulse">
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-50 bg-gray-50/30 animate-pulse">
                     <div className="w-12 h-12 bg-gray-200 rounded-full" />
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                      <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+                      <div className="h-3 bg-gray-200 rounded w-1/4" />
                     </div>
-                    <div className="h-8 w-16 bg-gray-200 rounded-lg" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="p-4 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                  <BookOpen className="h-8 w-8 text-blue-600" />
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse" />
+                  <div className="relative p-6 rounded-full bg-white shadow-xl">
+                    <BookOpen className="h-10 w-10 text-blue-500" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No recent sessions</h3>
-                <p className="text-gray-600 mb-6">Your upcoming sessions will appear here!</p>
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  View All Sessions
-                </Button>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No active sessions</h3>
+                <p className="text-gray-500 max-w-xs mx-auto mb-8">
+                  Your tutoring journey is just beginning. Set your availability to start receiving bookings.
+                </p>
+                <Link href="/tutor/availability">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-6 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-300 group">
+                    <Calendar className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                    Set Availability
+                  </Button>
+                </Link>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Performance Metrics */}
-        <Card className="shadow-xl border-0 overflow-hidden hover:shadow-2xl transition-all duration-300">
-          <div className="h-2 bg-gradient-to-r from-green-500 via-emerald-600 to-teal-600" />
-          <CardHeader className="pb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
-                  <Target className="h-6 w-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Performance Metrics</CardTitle>
-                  <CardDescription className="text-gray-600 mt-1">Track your teaching success</CardDescription>
-                </div>
+        <Card className="border-0 shadow-xl shadow-indigo-500/5 bg-gradient-to-b from-white to-gray-50/50 overflow-hidden hover:shadow-2xl transition-all duration-500">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-gray-50 text-blue-600">
+                <Target className="h-5 w-5" />
               </div>
-              <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                Excellent
-              </div>
+              <CardTitle className="text-lg font-bold text-gray-900">Insights</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8">
             {/* Metric 1 */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="font-semibold text-gray-900">Student Satisfaction</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-green-600">{stats?.rating.toFixed(1) || 0}/5.0</span>
-                  <div className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                    {Math.round((stats?.rating || 0) * 20)}%
-                  </div>
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Student Satisfaction</span>
+                <span className="text-sm font-bold text-indigo-600">{stats?.rating.toFixed(1) || 0}/5.0</span>
               </div>
-              <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-700 ease-out" style={{ width: `${Math.round((stats?.rating || 0) * 20)}%` }}>
-                    <div className="h-full bg-white/20 animate-pulse" />
-                  </div>
-                </div>
+              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
+                  style={{ width: `${Math.round((stats?.rating || 0) * 20)}%` }}
+                />
               </div>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Based on {stats?.totalReviews || 0} recent reviews</p>
             </div>
 
             {/* Metric 2 */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  <span className="font-semibold text-gray-900">Session Completion Rate</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-blue-600">95%</span>
-                  <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
-                    High
-                  </div>
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Completion Rate</span>
+                <span className="text-sm font-bold text-emerald-600">98%</span>
               </div>
-              <div className="relative">
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-out" style={{ width: '95%' }}>
-                    <div className="h-full bg-white/20 animate-pulse" />
-                  </div>
-                </div>
+              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                  style={{ width: '98%' }}
+                />
               </div>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Last 30 days performance</p>
             </div>
 
             {/* Achievement Section */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-500 text-white">
-                    <Award className="h-5 w-5" />
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+              <div className="relative p-5 bg-white rounded-2xl border border-yellow-50 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-yellow-50 text-yellow-600">
+                    <Award className="h-6 w-6" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">Top Rated Tutor</p>
-                    <p className="text-sm text-gray-600">Keep up the great work!</p>
+                    <p className="text-sm font-bold text-gray-900 line-height-tight">Power Tutor</p>
+                    <p className="text-xs text-gray-500">Top 5% this month</p>
                   </div>
                 </div>
-                <div className="text-2xl">🌟</div>
+                <div className="text-xl animate-bounce">🔥</div>
               </div>
             </div>
 
-            <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <TrendingUp className="h-4 w-4 mr-2" />
-              View Detailed Analytics
+            <Button className="w-full bg-gray-900 hover:bg-black text-white rounded-xl py-6 font-bold shadow-xl transition-all duration-300 hover:-translate-y-1">
+              Full Analytics Report
             </Button>
           </CardContent>
         </Card>

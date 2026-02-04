@@ -413,42 +413,48 @@ export default function AdminProfilePage() {
         </div>
       </div>
 
-      {/* Premium Success Modal */}
+      {/* Refined Success Modal - Standard, Fancy & Professional */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md border-0 p-0 overflow-hidden rounded-[32px] bg-white shadow-[0_32px_128px_-16px_rgba(0,0,0,0.2)]">
-          <div className="p-1">
-            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-12 text-center rounded-[31px] relative overflow-hidden">
-              {/* Background Sparkles */}
-              <div className="absolute top-0 right-0 p-4 text-white/10 rotate-12">
-                <Shield className="h-32 w-32" />
-              </div>
-              <div className="absolute bottom-0 left-0 p-4 text-white/10 -rotate-12">
-                <Sparkles className="h-24 w-24" />
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="h-24 w-24 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center p-1 mb-8 shadow-inner ring-1 ring-white/30 animate-in zoom-in spin-in-12 duration-700">
-                  <div className="h-full w-full bg-white rounded-full flex items-center justify-center shadow-2xl">
-                    <Check className="h-10 w-10 text-blue-600 animate-in bounce-in duration-1000 delay-300" />
-                  </div>
-                </div>
-
-                <h3 className="text-3xl font-black text-white tracking-tight mb-3">Sync Complete!</h3>
-                <p className="text-blue-50/80 text-lg font-medium max-w-[280px] leading-relaxed mb-10">
-                  Your administrator profile has been securelly updated and synchronized.
-                </p>
-
-                <div className="w-full flex flex-col gap-3">
-                  <Button
-                    onClick={() => setShowSuccessModal(false)}
-                    className="w-full bg-white hover:bg-white/95 text-blue-700 font-bold h-14 rounded-2xl shadow-xl transition-all duration-300 active:scale-95"
-                  >
-                    Return to Dashboard
-                  </Button>
-                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em]">End-to-End Encrypted</p>
+        <DialogContent className="sm:max-w-md border-0 p-8 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] animate-in zoom-in duration-300">
+          <div className="flex flex-col items-center text-center">
+            {/* Elegant Success Icon */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-green-100 rounded-full scale-150 blur-xl opacity-20 animate-pulse" />
+              <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center relative border border-green-100 shadow-sm">
+                <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-green-50">
+                  <CheckCircle className="h-8 w-8 text-green-500 animate-in bounce-in duration-700" />
                 </div>
               </div>
             </div>
+
+            <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
+              Profile Updated Successfully
+            </h3>
+            <p className="text-gray-500 text-base leading-relaxed mb-8 max-w-[280px]">
+              Your administrator details have been synchronized with the secure system.
+            </p>
+
+            {/* Subtle Feedback Summary */}
+            <div className="w-full space-y-3 mb-8">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sync Status</span>
+                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-2 py-0.5 text-[10px] font-bold">
+                  ENCRYPTED & LIVE
+                </Badge>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-100 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Check className="h-4 w-4" />
+              Continue to Dashboard
+            </Button>
+
+            <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.1em] mt-6">
+              SkillBridge Secure Admin Console
+            </p>
           </div>
         </DialogContent>
       </Dialog>

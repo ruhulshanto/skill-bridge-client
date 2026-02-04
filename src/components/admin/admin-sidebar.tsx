@@ -18,6 +18,7 @@ import {
   Settings,
   BarChart3,
   FileText,
+  User,
   Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -315,31 +316,15 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                   <p className="text-xs text-gray-500">{user?.role || "Administrator"}</p>
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Settings size={16} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/profile" className="flex items-center cursor-pointer">
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/settings" className="flex items-center cursor-pointer">
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>Help</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-600">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </Button>
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-3">
@@ -361,15 +346,17 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
             </div>
           )}
         </div>
-      </div>
+      </div >
 
       {/* Mobile Sidebar Overlay */}
-      {isMobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={closeMobileSidebar}
-        />
-      )}
+      {
+        isMobileOpen && (
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
+            onClick={closeMobileSidebar}
+          />
+        )
+      }
 
       {/* Mobile Sidebar */}
       <div

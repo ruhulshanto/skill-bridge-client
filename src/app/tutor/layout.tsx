@@ -4,7 +4,7 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { Navbar } from "@/components/layout/navbar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, User, Clock, Users } from "lucide-react";
+import { Home, Calendar, User, Clock, Users, CreditCard } from "lucide-react";
 
 export default function TutorLayout({
   children,
@@ -35,6 +35,11 @@ export default function TutorLayout({
       icon: Clock,
     },
     {
+      href: "/tutor/earnings",
+      label: "Earnings",
+      icon: CreditCard,
+    },
+    {
       href: "/tutor/profile",
       label: "Profile",
       icon: User,
@@ -55,8 +60,8 @@ export default function TutorLayout({
                     key={item.href}
                     href={item.href}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-100"
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-100"
                       }`}
                   >
                     <item.icon className="h-4 w-4" />

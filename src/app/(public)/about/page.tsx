@@ -77,11 +77,11 @@ export default function AboutPage() {
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden border-2 hover:border-purple-500/50 transition-colors group">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <Card className="relative overflow-hidden border-2 hover:border-blue-500/50 transition-colors group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardHeader>
-                <div className="h-14 w-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-4">
-                  <Globe className="h-7 w-7 text-purple-600" />
+                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
+                  <Globe className="h-7 w-7 text-blue-600" />
                 </div>
                 <CardTitle className="text-2xl font-bold">Our Vision</CardTitle>
               </CardHeader>

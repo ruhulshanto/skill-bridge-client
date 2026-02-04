@@ -6,6 +6,7 @@ export interface TutorStats {
   totalEarnings: number;
   rating: number;
   totalReviews: number;
+  totalStudents: number;
 }
 
 export interface TutorBooking {
@@ -123,6 +124,7 @@ const tutorService = {
         totalEarnings: 0,
         rating: 0,
         totalReviews: 0,
+        totalStudents: 0,
       };
     }
   },

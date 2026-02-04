@@ -85,44 +85,44 @@ export default function TutorStudentsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">Total Sessions</p>
+                <p className="text-sm font-medium text-blue-600">Total Sessions</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {students.reduce((sum, s) => sum + s.totalSessions, 0)}
                 </p>
               </div>
-              <BookOpen className="h-8 w-8 text-green-600" />
+              <BookOpen className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-purple-200 bg-purple-50">
+        <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Completed</p>
+                <p className="text-sm font-medium text-blue-600">Completed</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {students.reduce((sum, s) => sum + s.completedSessions, 0)}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <TrendingUp className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-blue-200 bg-blue-50">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-600">Upcoming</p>
+                <p className="text-sm font-medium text-blue-600">Upcoming</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {students.reduce((sum, s) => sum + s.upcomingSessions, 0)}
                 </p>
               </div>
-              <Calendar className="h-8 w-8 text-orange-600" />
+              <Calendar className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
