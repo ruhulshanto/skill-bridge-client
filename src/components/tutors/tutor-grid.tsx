@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import TutorCard from "./tutor-card";
 import { apiClient } from "@/lib/api";
+import { SkeletonTutorGrid } from "@/components/skeletons/skeleton-tutor-grid";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 
 export default function TutorGrid() {
   const [tutors, setTutors] = useState<any[]>([]);
@@ -12,6 +14,7 @@ export default function TutorGrid() {
   const [mounted, setMounted] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const searchParams = useSearchParams();
+  const showSkeleton = useDelayedLoading(loading || !mounted, 300);
 
   useEffect(() => {
     setMounted(true);
@@ -29,11 +32,13 @@ export default function TutorGrid() {
         const search = searchParams.get("search");
         const minRating = searchParams.get("minRating");
         const maxRate = searchParams.get("maxRate");
+        const free = searchParams.get("free");
 
         if (category) params.category = category;
         if (search) params.search = search;
         if (minRating) params.minRating = minRating;
         if (maxRate) params.maxRate = maxRate;
+        if (free) params.free = free;
         
         // Show all tutors by default - set high limit
         params.limit = 100; // Show up to 100 tutors by default
@@ -77,14 +82,8 @@ export default function TutorGrid() {
     fetchTutors();
   }, [mounted, searchParams]);
 
-  if (!mounted || loading) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="bg-muted animate-pulse rounded-lg h-64"></div>
-        ))}
-      </div>
-    );
+  if ((!mounted || loading) && showSkeleton) {
+    return <SkeletonTutorGrid />;
   }
 
   if (error) {
@@ -107,7 +106,7 @@ export default function TutorGrid() {
   }
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Show count information */}
       <div className="mb-4 text-sm text-muted-foreground">
         {totalCount > 0 ? (

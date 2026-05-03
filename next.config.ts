@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "plus.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "randomuser.me",
+      },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+      },
     ],
   },
   async rewrites() {

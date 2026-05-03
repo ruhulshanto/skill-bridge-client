@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SkeletonCard } from "@/components/skeletons/skeleton-card";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 
 interface Category {
   id: string;
@@ -21,6 +23,7 @@ interface Category {
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = useDelayedLoading(loading, 300);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -87,37 +90,22 @@ export default function CategoriesPage() {
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
+  if (loading && showSkeleton) {
     return (
       <Container className="py-8">
         <div className="flex items-center justify-center flex-col mb-8">
-          <div className="h-8 w-8 rounded-lg bg-gray-600 flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-sm">SB</span>
-          </div>
-          <h1 className="text-3xl font-bold mb-4">Loading Categories...</h1>
+          <div className="h-8 w-8 rounded-lg bg-[var(--bg-subtle)] animate-pulse mx-auto mb-4" />
+          <div className="h-8 w-64 rounded-lg bg-[var(--bg-subtle)] animate-pulse mb-4" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="animate-pulse">
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4"></div>
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-full"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+          <SkeletonCard count={6} />
         </div>
       </Container>
     );
   }
 
   return (
-    <Container className="py-8">
+    <Container className="py-8 animate-fade-in">
       {/* Enhanced Header Section */}
       <div className="text-center mb-12">
         <div className="relative inline-block mb-6">

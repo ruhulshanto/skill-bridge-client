@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, X } from "lucide-react";
+import { Loader2, Star, X } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { toast } from "sonner";
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -35,7 +36,9 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
     e.preventDefault();
     
     if (rating === 0) {
-      alert("Please select a rating");
+      toast.error("Please enter a rating", {
+        description: "Tap one to five stars before submitting.",
+      });
       return;
     }
 
@@ -49,23 +52,28 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
       });
 
       if (result.error) {
-        alert(result.error.message || "Failed to submit review");
+        toast.error("Could not submit review", {
+          description: result.error.message,
+        });
         return;
       }
 
-      console.log("Review submitted successfully:");
-      
-      alert("Review submitted successfully!");
+      toast.success("Thank you!", {
+        description: "Your review is now visible on the tutor profile.",
+      });
       setRating(0);
       setComment("");
       onClose();
-      
+
       if (onReviewSubmitted) {
         onReviewSubmitted();
       }
     } catch (error) {
       console.error("Error submitting review:", error);
-      alert(error instanceof Error ? error.message : "Failed to submit review. Please try again.");
+      toast.error("Something went wrong", {
+        description:
+          error instanceof Error ? error.message : "Please try again in a moment.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -187,7 +195,14 @@ export default function ReviewModal({ isOpen, onClose, booking, onReviewSubmitte
                 className="flex-1"
                 disabled={isSubmitting || rating === 0}
               >
-                {isSubmitting ? "Submitting..." : "Submit Review"}
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Submitting...
+                  </span>
+                ) : (
+                  "Submit Review"
+                )}
               </Button>
             </div>
           </form>

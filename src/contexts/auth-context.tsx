@@ -21,13 +21,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      console.log("[AUTH CONTEXT] Checking authentication...");
       const { data } = await authClient.getSession();
       if (data?.user) {
+        console.log("[AUTH CONTEXT] Session found for user:", data.user.email);
         setUser(data.user as User);
       } else {
+        console.log("[AUTH CONTEXT] No session found");
         setUser(null);
       }
     } catch (error) {
+      console.error("[AUTH CONTEXT] checkAuth error:", error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -82,7 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Return a safe default instead of throwing during SSR/hydration
+    return {
+      user: null,
+      isLoading: true,
+      login: async () => false,
+      logout: async () => {},
+      checkAuth: async () => {},
+      updateUser: () => {},
+    };
   }
   return context;
 }

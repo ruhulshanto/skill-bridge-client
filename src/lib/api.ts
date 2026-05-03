@@ -15,6 +15,15 @@ export interface ApiResponse<T = any> {
   };
 }
 
+export type TutorReviewDto = {
+  id: string;
+  user: string;
+  userImage?: string | null;
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
+};
+
 class ApiClient {
   private baseURL: string;
 
@@ -28,13 +37,14 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${this.baseURL}${endpoint}`;
-      
+
       const config: RequestInit = {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
         },
         credentials: 'include', // Include cookies for Better Auth
+        cache: 'no-store', // Prevent browser caching
         ...options,
       };
 
@@ -48,18 +58,52 @@ class ApiClient {
       }
 
       const response = await fetch(url, config);
-      const data = await response.json();
 
-      if (!response.ok) {
+      const contentType = response.headers.get('content-type') ?? '';
+      let payload: unknown = null;
+
+      if (contentType.includes('application/json')) {
+        try {
+          payload = await response.json();
+        } catch {
+          payload = null;
+        }
+      } else if (!response.ok) {
+        const text = (await response.text()).trim().slice(0, 280);
         return {
           error: {
-            message: data.message || 'Request failed',
+            message: text || 'Request failed',
             code: response.status.toString(),
           },
         };
       }
 
-      return { data };
+      if (!response.ok && payload !== null && typeof payload === 'object') {
+        const body = payload as Record<string, unknown>;
+        const nested = body?.error as Record<string, unknown> | undefined;
+        const message =
+          (typeof body?.message === 'string' && body.message) ||
+          (typeof nested?.message === 'string' && nested.message) ||
+          'Request failed';
+
+        return {
+          error: {
+            message,
+            code: response.status.toString(),
+          },
+        };
+      }
+
+      if (!response.ok) {
+        return {
+          error: {
+            message: 'Request failed',
+            code: response.status.toString(),
+          },
+        };
+      }
+
+      return { data: payload as T };
     } catch (error) {
       return {
         error: {
@@ -130,6 +174,10 @@ class ApiClient {
     }
   }
 
+  async getTutorStats(): Promise<ApiResponse<{ minPrice: number; maxPrice: number; avgPrice: number }>> {
+    return this.request('/api/tutors/stats');
+  }
+
   async getTutorById(id: string): Promise<ApiResponse<User>> {
     try {
       return this.request<User>(`/api/tutors/${id}`);
@@ -188,8 +236,20 @@ class ApiClient {
     });
   }
 
-  async getTutorReviews(tutorId: string) {
-    return this.request(`/api/reviews/tutor/${tutorId}`);
+  async getTutorReviews(tutorId: string): Promise<ApiResponse<TutorReviewDto[]>> {
+    const res = await this.request(`/api/reviews/tutor/${tutorId}`);
+    if (res.error) return { error: res.error };
+    const payload = res.data as unknown;
+    const list =
+      Array.isArray(payload)
+        ? payload
+        : payload &&
+          typeof payload === 'object' &&
+          'data' in payload &&
+          Array.isArray((payload as { data: unknown[] }).data)
+          ? (payload as { data: unknown[] }).data
+          : [];
+    return { data: list as TutorReviewDto[] };
   }
 
   // Categories endpoints
@@ -207,8 +267,8 @@ class ApiClient {
     phone?: string;
     bio?: string;
     location?: string;
-  }) {
-    return this.request('/api/student/profile', {
+  }): Promise<ApiResponse<User>> {
+    return this.request<User>('/api/student/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });
@@ -216,7 +276,7 @@ class ApiClient {
 
   // Admin profile endpoints
   async getAdminProfile(): Promise<ApiResponse<User>> {
-    return this.request('/api/admin/profile');
+    return this.request<User>('/api/admin/profile');
   }
 
   async updateAdminProfile(profileData: {
@@ -224,8 +284,8 @@ class ApiClient {
     phone?: string;
     bio?: string;
     location?: string;
-  }) {
-    return this.request('/api/admin/profile', {
+  }): Promise<ApiResponse<User>> {
+    return this.request<User>('/api/admin/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData),
     });

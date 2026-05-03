@@ -300,6 +300,28 @@ const tutorService = {
       return [];
     }
   },
+
+  // Get tutor application status
+  async getApplicationStatus(): Promise<any> {
+    try {
+      const response = await fetch(`${API_URL}/api/tutor/application`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch application status');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.warn("Failed to fetch application status:", error);
+      return null;
+    }
+  },
 };
 
 // Public tutor service for browsing

@@ -20,6 +20,8 @@ import {
   FileText,
   User,
   Bell,
+  UserCheck,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
@@ -36,7 +38,7 @@ import {
 
 interface AdminSidebarProps extends React.HTMLAttributes<HTMLDivElement> { }
 
-export function AdminSidebar({ className }: AdminSidebarProps) {
+export function AdminSidebar({ className, children }: AdminSidebarProps & { children?: React.ReactNode }) {
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -44,7 +46,6 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [stats, setStats] = useState<{ totalUsers: number } | null>(null);
 
-  // Check for mobile screen
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -52,13 +53,11 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         setIsMobileOpen(false);
       }
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Fetch stats for dynamic badges
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -77,44 +76,47 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       label: "Dashboard",
       icon: LayoutDashboard,
       href: "/admin",
-      color: "text-blue-500",
     },
     {
       label: "Users",
       icon: Users,
       href: "/admin/users",
-      color: "text-purple-500",
       badge: stats?.totalUsers?.toString() || "0",
+    },
+    {
+      label: "Applications",
+      icon: UserCheck,
+      href: "/admin/applications",
     },
     {
       label: "Bookings",
       icon: Calendar,
       href: "/admin/bookings",
-      color: "text-emerald-500",
     },
     {
       label: "Categories",
       icon: Layers,
       href: "/admin/categories",
-      color: "text-amber-500",
     },
     {
       label: "Analytics",
       icon: BarChart3,
       href: "/admin/analytics",
-      color: "text-cyan-500",
     },
     {
       label: "Reports",
       icon: FileText,
       href: "/admin/reports",
-      color: "text-rose-500",
     },
     {
       label: "Settings",
       icon: Settings,
       href: "/admin/settings",
-      color: "text-slate-400",
+    },
+    {
+      label: "Profile",
+      icon: User,
+      href: "/admin/profile",
     },
   ];
 
@@ -137,51 +139,60 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
   return (
     <>
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+      {/* ── Mobile Header ── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-[100] bg-[#e5f2ff] border-b border-[#a3c7e6] shadow-sm overflow-hidden h-16">
+        <div className="relative z-10 flex items-center justify-between px-6 h-full">
+          <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="h-9 w-9"
+              className="h-10 w-10 rounded-xl bg-white/50 border border-[#a3c7e6] text-[#2d6a9f] hover:bg-white transition-all shadow-sm"
             >
-              {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMobileOpen ? <X size={22} /> : <Menu size={22} />}
             </Button>
-            <Logo subtitle="Admin Panel" />
+            <Logo subtitle="Admin" />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bell size={18} />
+          
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-white/50 border border-[#a3c7e6] text-[#2d6a9f] shadow-sm hidden sm:flex">
+              <Bell size={20} />
             </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar className="h-8 w-8 cursor-pointer border">
-                  <AvatarImage src="/avatar.png" />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-purple-100 text-blue-600">
-                    {user?.name?.charAt(0) || "A"}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative group cursor-pointer">
+                  <div className="absolute inset-0 bg-primary/20 blur-md rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-md relative z-10">
+                    <AvatarImage src="/avatar.png" />
+                    <AvatarFallback className="bg-white text-primary font-black">
+                      {user?.name?.charAt(0) || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" className="w-64 mt-2 p-2 rounded-[2rem] border-[#a3c7e6] bg-[#e5f2ff] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-4 mb-2">
+                  <p className="text-xs font-black text-[#2d6a9f] uppercase tracking-widest mb-1 opacity-60">Session Controller</p>
+                  <p className="text-sm font-black text-[#0A2540] truncate">{user?.name || "Administrator"}</p>
+                </div>
+                <DropdownMenuSeparator className="bg-[#a3c7e6]/30 mx-2" />
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/profile" className="flex items-center cursor-pointer">
-                    Profile
+                  <Link href="/admin/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer font-bold text-[#2d6a9f] hover:bg-white hover:text-primary transition-all">
+                    <User size={18} />
+                    Profile Dossier
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/settings" className="flex items-center cursor-pointer">
-                    Settings
+                  <Link href="/admin/settings" className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer font-bold text-[#2d6a9f] hover:bg-white hover:text-primary transition-all">
+                    <Settings size={18} />
+                    System Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                <DropdownMenuSeparator className="bg-[#a3c7e6]/30 mx-2" />
+                <DropdownMenuItem onClick={logout} className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 font-black hover:bg-red-50 transition-all cursor-pointer">
+                  <LogOut size={18} />
+                  Terminate Access
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -189,46 +200,44 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
         </div>
       </div>
 
-      {/* Desktop Sidebar */}
       <div
+        style={{ backgroundColor: "#e5f2ff" }}
         className={cn(
-          "hidden md:flex flex-col fixed inset-y-0 z-40 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out",
-          isCollapsed ? "w-20" : "w-64",
+          "hidden md:flex flex-col fixed inset-y-0 left-0 z-[90] border-r border-[#a3c7e6] transition-all duration-500 ease-in-out shadow-2xl overflow-hidden",
+          isCollapsed ? "w-24" : "w-80",
           className
         )}
       >
         {/* Logo Section */}
-        <div className={cn("px-4 py-5", isCollapsed ? "px-3" : "")}>
+        <div className={cn("px-8 py-10 relative z-10", isCollapsed ? "px-0 flex flex-col items-center" : "")}>
           <div
             className={cn(
-              "flex items-center gap-3 transition-all duration-200",
-              isCollapsed ? "justify-center" : "justify-between"
+              "flex items-center transition-all duration-300 w-full",
+              isCollapsed ? "flex-col gap-6 justify-center" : "justify-between gap-4"
             )}
           >
             <Logo subtitle="Admin Panel" collapsed={isCollapsed} />
+            
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className={cn(
-                "h-8 w-8 rounded-lg transition-all",
-                isCollapsed ? "rotate-180" : ""
+                "h-10 w-10 rounded-2xl border border-[#a3c7e6]/50 bg-white/50 text-[#2d6a9f] hover:bg-white transition-all shadow-sm",
+                isCollapsed ? "mx-auto" : ""
               )}
             >
-              <ChevronLeft size={16} />
+              {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </Button>
           </div>
         </div>
 
-        <Separator className="bg-gray-100" />
-
-
         {/* Navigation */}
-        <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <div className={cn("px-2 mb-2", isCollapsed ? "text-center" : "")}>
+        <div className="flex-1 px-5 py-4 space-y-2 overflow-y-auto relative z-10 custom-scrollbar">
+          <div className={cn("px-4 mb-8", isCollapsed ? "text-center" : "")}>
             {!isCollapsed && (
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Main Menu
+              <p className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-[0.25em] opacity-50">
+                Main Directives
               </p>
             )}
           </div>
@@ -240,31 +249,33 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                 key={route.href}
                 href={route.href}
                 className={cn(
-                  "flex items-center rounded-lg transition-all duration-200 group",
+                  "flex items-center transition-all duration-500 group relative mb-3",
                   isActive
-                    ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                  isCollapsed ? "justify-center px-3 py-3" : "px-3 py-2.5"
+                    ? "bg-white text-primary shadow-xl shadow-primary/5 border border-[#a3c7e6]/40"
+                    : "text-[#2d6a9f] hover:bg-white/50 hover:text-primary",
+                  isCollapsed ? "justify-center rounded-2xl h-14 w-14 mx-auto p-0" : "px-5 py-4 rounded-[1.5rem]"
                 )}
               >
-                <div className="relative">
+                <div className="relative z-10">
                   <route.icon
-                    className={cn("h-5 w-5", route.color, isCollapsed ? "mx-auto" : "")}
+                    className={cn(
+                      "h-5 w-5 transition-transform duration-500 group-hover:scale-125",
+                      isActive ? "text-primary stroke-[2.5]" : "text-[#2d6a9f]",
+                    )}
                   />
-
                 </div>
                 {!isCollapsed && (
                   <>
-                    <span className="ml-3 font-medium text-sm">{route.label}</span>
+                    <span className="ml-4 font-black text-[11px] uppercase tracking-[0.15em]">{route.label}</span>
                     {route.badge && (
-                      <span className="ml-auto h-5 w-5 rounded-full bg-red-100 text-red-600 text-xs flex items-center justify-center">
+                      <span className="ml-auto px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-[9px] font-black border border-primary/20 shadow-inner">
                         {route.badge}
                       </span>
                     )}
                   </>
                 )}
-                {isCollapsed && isActive && (
-                  <div className="absolute right-0 h-6 w-1 rounded-l-full bg-blue-600" />
+                {isActive && !isCollapsed && (
+                  <div className="absolute right-4 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(134,198,255,0.8)]" />
                 )}
               </Link>
             );
@@ -272,9 +283,9 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 
           {!isCollapsed && (
             <>
-              <div className="px-2 mb-2 mt-6">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Preferences
+              <div className="px-4 mb-8 mt-12">
+                <p className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-[0.25em] opacity-50">
+                  Infrastructure
                 </p>
               </div>
 
@@ -285,14 +296,15 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                     key={route.href}
                     href={route.href}
                     className={cn(
-                      "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200",
+                      "flex items-center transition-all duration-500 group mb-3",
                       isActive
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-white text-primary shadow-xl border border-[#a3c7e6]/40"
+                        : "text-[#2d6a9f] hover:bg-white hover:text-primary",
+                      isCollapsed ? "justify-center rounded-2xl h-14 w-14 mx-auto p-0" : "px-5 py-4 rounded-[1.5rem]"
                     )}
                   >
-                    <route.icon className={cn("h-5 w-5", route.color)} />
-                    <span className="ml-3 font-medium text-sm">{route.label}</span>
+                    <route.icon className={cn("h-5 w-5 transition-transform duration-500 group-hover:scale-125", isActive ? "text-primary stroke-[2.5]" : "text-[#2d6a9f]")} />
+                    <span className="ml-4 font-black text-[11px] uppercase tracking-[0.15em]">{route.label}</span>
                   </Link>
                 );
               })}
@@ -300,51 +312,24 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           )}
         </div>
 
-        {/* User Profile & Logout */}
-        <div className="p-4 border-t border-gray-100">
-          {!isCollapsed ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-9 w-9 border">
-                  <AvatarImage src="/avatar.png" />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-purple-100 text-blue-600">
-                    {user?.name?.charAt(0) || "A"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-sm text-gray-900">{user?.name || "Admin User"}</p>
-                  <p className="text-xs text-gray-500">{user?.role || "Administrator"}</p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                title="Logout"
-              >
-                <LogOut size={16} />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center space-y-3">
-              <Avatar className="h-10 w-10 border">
-                <AvatarImage src="/avatar.png" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-100 to-purple-100 text-blue-600">
-                  {user?.name?.charAt(0) || "A"}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-9 w-9 rounded-lg"
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </Button>
-            </div>
-          )}
+        {/* Logout Section */}
+        <div className={cn("p-8 border-t border-[#a3c7e6]/30 bg-white/20 relative z-10", isCollapsed ? "px-0 py-6" : "")}>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            className={cn(
+              "rounded-xl font-black text-[10px] uppercase tracking-widest text-red-500 hover:bg-red-50 hover:text-red-600 transition-all border border-transparent hover:border-red-100",
+              isCollapsed ? "h-14 w-14 mx-auto p-0" : "w-full h-12"
+            )}
+            title="Logout Session"
+          >
+            {isCollapsed ? <LogOut size={22} /> : (
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout Session
+              </>
+            )}
+          </Button>
         </div>
       </div >
 
@@ -352,33 +337,28 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
       {
         isMobileOpen && (
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
+            className="md:hidden fixed inset-0 z-[110] bg-[#0A2540]/30 backdrop-blur-md transition-all duration-500"
             onClick={closeMobileSidebar}
           />
         )
       }
 
-      {/* Mobile Sidebar */}
       <div
+        style={{ backgroundColor: "#e5f2ff" }}
         className={cn(
-          "md:hidden fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-100 transform transition-transform duration-300 ease-in-out",
+          "md:hidden fixed inset-y-0 left-0 z-[120] w-[85%] max-w-sm border-r border-[#a3c7e6] transform transition-transform duration-500 ease-out shadow-2xl",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full">
-          {/* Mobile Sidebar Header */}
-          <div className="p-5 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <Logo subtitle="Admin Panel" />
-            </div>
+        <div className="flex flex-col h-full relative z-10">
+          <div className="p-8 border-b border-[#a3c7e6]/30 flex items-center justify-between">
+            <Logo subtitle="Admin" />
+            <Button variant="ghost" size="icon" onClick={closeMobileSidebar} className="h-10 w-10 rounded-xl bg-white border border-[#a3c7e6] text-[#2d6a9f]">
+              <X size={24} />
+            </Button>
           </div>
 
-          {/* Mobile Navigation */}
-          <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <p className="px-3 mb-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Navigation
-            </p>
-
+          <div className="flex-1 px-6 py-8 space-y-2 overflow-y-auto">
             {routes.map((route) => {
               const isActive = pathname === route.href;
               return (
@@ -387,64 +367,63 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
                   href={route.href}
                   onClick={closeMobileSidebar}
                   className={cn(
-                    "flex items-center px-3 py-3 rounded-lg transition-all duration-200",
+                    "flex items-center px-6 py-5 rounded-[1.5rem] transition-all duration-300 mb-3",
                     isActive
-                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-white text-primary shadow-lg border border-[#a3c7e6]/40"
+                      : "text-[#2d6a9f] hover:bg-white/40"
                   )}
                 >
-                  <route.icon className={cn("h-5 w-5", route.color)} />
-                  <span className="ml-3 font-medium">{route.label}</span>
-                  {route.badge && (
-                    <span className="ml-auto h-5 w-5 rounded-full bg-red-100 text-red-600 text-xs flex items-center justify-center">
-                      {route.badge}
-                    </span>
-                  )}
+                  <route.icon className={cn("h-6 w-6", isActive ? "text-primary stroke-[2.5]" : "text-[#2d6a9f]")} />
+                  <span className="ml-5 font-black text-xs uppercase tracking-[0.2em]">{route.label}</span>
                   {isActive && (
-                    <ChevronRight className="ml-auto h-4 w-4 text-blue-600" />
+                    <div className="ml-auto h-2 w-2 rounded-full bg-primary animate-pulse" />
                   )}
                 </Link>
               );
             })}
           </div>
 
-          {/* Mobile User Profile */}
-          <div className="p-4 border-t border-gray-100 bg-gray-50">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-11 w-11 border-2 border-white shadow">
-                <AvatarImage src="/avatar.png" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-100 to-purple-100 text-blue-600">
-                  {user?.name?.charAt(0) || "A"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900">{user?.name || "Admin User"}</p>
-                <p className="text-sm text-gray-500">{user?.email || "admin@skillbridge.com"}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={logout}
-                className="h-9 w-9 rounded-lg text-gray-500 hover:text-red-600"
-              >
-                <LogOut size={18} />
-              </Button>
-            </div>
+          <div className="p-8 border-t border-[#a3c7e6]/30 bg-white/40 backdrop-blur-sm">
+            <Button
+              variant="ghost"
+              onClick={logout}
+              className="w-full h-14 rounded-2xl bg-red-50 text-red-500 border border-red-100 shadow-sm font-black text-xs uppercase tracking-widest"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Terminate Session
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content Spacing */}
       <div
         className={cn(
-          "transition-all duration-300",
+          "transition-all duration-500 flex-1 flex flex-col",
           isMobile
-            ? "pt-16"
+            ? "pt-0"
             : isCollapsed
-              ? "md:pl-20"
-              : "md:pl-64"
+              ? "md:pl-24"
+              : "md:pl-80"
         )}
-      />
+      >
+        {children}
+      </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(163, 199, 230, 0.5);
+          border-radius: 20px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(134, 198, 255, 0.8);
+        }
+      `}</style>
     </>
   );
 }

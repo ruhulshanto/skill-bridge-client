@@ -1,7 +1,5 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock } from "lucide-react";
+import { Star, MapPin, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { User } from "@/types";
 import Image from "next/image";
@@ -12,8 +10,6 @@ interface TutorCardProps {
 
 export default function TutorCard({ tutor }: TutorCardProps) {
   const profile = tutor.tutorProfile;
-
-  // Show tutor even without complete profile
   const hasProfile = !!profile;
   const rating = hasProfile ? (profile.rating || 0) : 0;
   const subjects = hasProfile && profile.subjects ? profile.subjects : [];
@@ -21,121 +17,111 @@ export default function TutorCard({ tutor }: TutorCardProps) {
   const bio = hasProfile ? (profile.bio || "") : "";
 
   return (
-    <Card className="group overflow-hidden border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 bg-white">
-      {/* Image Section with Overlay Badges */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+    <div className="group flex flex-col overflow-hidden rounded-[10px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+      style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+      {/* Image */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden"
+        style={{ backgroundColor: "var(--bg-subtle)" }}>
         <Image
           src={tutor.image || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400"}
           alt={tutor.name}
-          width={400}
-          height={300}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          width={400} height={300}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[0.2] group-hover:grayscale-0"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.4), transparent)" }} />
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {!hasProfile && (
-            <Badge className="bg-blue-600/90 backdrop-blur-md text-white border-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1">
-              New Joining
-            </Badge>
-          )}
-          {rating >= 4.5 && (
-            <Badge className="bg-amber-500/90 backdrop-blur-md text-white border-0 text-[10px] font-bold uppercase tracking-wider px-2 py-1">
-              Top Rated
-            </Badge>
-          )}
-        </div>
+         {/* Badges */}
+         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+           {!hasProfile && (
+             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+               style={{ backgroundColor: "var(--bg-card)", color: "var(--text-muted)" }}>
+               New
+             </span>
+           )}
+           {hourlyRate === 0 && (
+             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+               style={{ backgroundColor: "var(--accent)", color: "var(--accent-foreground)" }}>
+               Free Tutor
+             </span>
+           )}
+           {rating >= 4.5 && hourlyRate > 0 && (
+             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+               style={{ backgroundColor: "var(--bg-card)", color: "var(--text-muted)" }}>
+               Top Rated
+             </span>
+           )}
+         </div>
 
-        {/* Floating Rating Card */}
-        <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md rounded-xl p-2 shadow-xl border border-white/20 flex items-center gap-1.5 transition-transform group-hover:scale-110">
-          <div className="p-1 rounded-lg bg-yellow-400 text-white">
-            <Star className="h-3 w-3 fill-current" />
-          </div>
-          <span className="text-sm font-black text-slate-800">{rating.toFixed(1)}</span>
+        {/* Rating badge */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-lg"
+          style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <Star className="h-3 w-3 fill-current" style={{ color: "var(--text-muted)" }} />
+          <span className="text-xs font-black" style={{ color: "var(--text)" }}>{rating.toFixed(1)}</span>
         </div>
       </div>
 
-      <CardHeader className="pb-3 pt-5">
-        <div className="space-y-1">
-          <CardTitle className="text-xl font-black text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-            {tutor.name}
-          </CardTitle>
-          <div className="flex flex-wrap gap-1.5 pt-1">
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-5">
+        <div className="mb-3">
+          <h3 className="font-black text-lg line-clamp-1 mb-1" style={{ color: "var(--text)" }}>{tutor.name}</h3>
+          <div className="flex flex-wrap gap-1">
             {subjects.length > 0 ? (
               subjects.slice(0, 3).map((s, idx) => (
-                <Badge key={idx} variant="secondary" className="bg-slate-50 text-[10px] text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors border-slate-100">
+                <span key={idx} className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                  style={{ backgroundColor: "var(--bg-subtle)", color: "var(--text-muted)" }}>
                   {s.subject.name}
-                </Badge>
+                </span>
               ))
             ) : (
-              <span className="text-xs text-slate-400 font-medium italic">Onboarding...</span>
-            )}
-            {subjects.length > 3 && (
-              <Badge variant="secondary" className="bg-slate-50 text-[10px] text-slate-400 border-slate-100">
-                +{subjects.length - 3}
-              </Badge>
+              <span className="text-xs italic" style={{ color: "var(--text-faint)" }}>Onboarding...</span>
             )}
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="pb-4">
-        <div className="space-y-4">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-slate-500">
-              <div className="p-1.5 rounded-lg bg-slate-50">
-                <MapPin className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-tight">Online</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-slate-500">
-              <div className="p-1.5 rounded-lg bg-slate-50">
-                <Clock className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-xs font-bold uppercase tracking-tight">
-                {hasProfile ? `${profile?.experience || 0} Years` : "N/A"}
-              </span>
-            </div>
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
+            <MapPin className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">Online</span>
           </div>
-
-          <div className="h-px bg-slate-100 w-full" />
-
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Pricing</span>
-              <span className="text-2xl font-black text-blue-600">
-                ${hourlyRate}<small className="text-xs text-slate-400 font-bold">/hr</small>
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest block mb-1">Feedback</span>
-              <div className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-[10px] font-black tracking-wider border border-green-100">
-                {hasProfile ? `${profile?.totalReviews || 0} REVIEWS` : "PURE TALENT"}
-              </div>
-            </div>
+          <div className="flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
+            <Clock className="h-3.5 w-3.5" />
+            <span className="text-xs font-semibold">{hasProfile ? `${profile?.experience || 0} yrs` : "N/A"}</span>
           </div>
-
-          {bio ? (
-            <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed font-medium pt-1">
-              {bio}
-            </p>
-          ) : (
-            <p className="text-sm text-slate-400 italic line-clamp-2 leading-relaxed pt-1">
-              "Dedicated to providing exceptional learning experiences tailored to each student's unique needs."
-            </p>
-          )}
         </div>
-      </CardContent>
 
-      <CardFooter className="pt-0 pb-6 px-6">
-        <Button asChild className="w-full h-12 bg-slate-900 hover:bg-blue-600 text-white font-black rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 active:scale-95 border-0">
-          <Link href={`/tutors/${tutor.id}`}>
-            Review Credentials
-          </Link>
+        <div className="h-px mb-3" style={{ backgroundColor: "var(--border)" }} />
+
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--text-faint)" }}>Rate</span>
+            <p className="text-xl font-black" style={{ color: "var(--text)" }}>
+              {hourlyRate === 0 ? (
+                <span className="text-green-600">Free</span>
+              ) : (
+                <>
+                  ${hourlyRate}<small className="text-xs font-semibold ml-0.5" style={{ color: "var(--text-faint)" }}>/hr</small>
+                </>
+              )}
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--text-faint)" }}>Reviews</span>
+            <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>
+              {hasProfile ? `${profile?.totalReviews || 0}` : "—"}
+            </p>
+          </div>
+        </div>
+
+        {bio && (
+          <p className="text-sm line-clamp-2 mb-4 flex-1" style={{ color: "var(--text-muted)" }}>{bio}</p>
+        )}
+
+        <Button asChild className="w-full h-10 rounded-[10px] font-bold mt-auto"
+          style={{ backgroundColor: "var(--accent)", color: "var(--text)", border: "none" }}>
+          <Link href={`/tutors/${tutor.id}`}>View Profile</Link>
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

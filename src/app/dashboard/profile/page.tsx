@@ -12,7 +12,10 @@ import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { User } from "@/types";
-import { CheckCircle, X } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { SkeletonProfile } from "@/components/skeletons/skeleton-profile";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 
 interface UserProfileState {
   bio: string;
@@ -43,6 +46,8 @@ export default function StudentProfilePage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const showSkeleton = useDelayedLoading(profileLoading, 300);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfileState>({
     bio: "",
@@ -74,14 +79,11 @@ export default function StudentProfilePage() {
     // Fetch actual user profile data from backend
     const fetchProfile = async () => {
       try {
-        console.log("🔍 Fetching student profile...");
         const result = await apiClient.getStudentProfile();
-        console.log("📊 API Response:", result);
 
         const resultAny = result as any; // Temporarily cast to any to access nested data
         if (resultAny.data && resultAny.data.data) {
           const userData = resultAny.data.data as User; // Fix: Access nested data
-          console.log("👤 User data from DB:", userData);
           
           const profileData = {
             bio: userData.bio || "",
@@ -95,7 +97,6 @@ export default function StudentProfilePage() {
             lastActive: userData.updatedAt ? new Date(userData.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
           };
 
-          console.log("📝 Profile data to set:", profileData);
           setUserProfile(profileData);
           
           const formDataToSet = {
@@ -103,15 +104,12 @@ export default function StudentProfilePage() {
             email: userData.email || "",
             ...profileData,
           };
-          console.log("📋 Form data to set:", formDataToSet);
           setFormData(formDataToSet);
         } else {
-          console.log("❌ No data in API response");
+          // keep silent
         }
       } catch (error) {
-        console.error("💥 Failed to fetch profile:", error);
         // Fallback to user data from auth context
-        console.log("🔄 Using fallback data from auth context:", user);
         
         const fallbackData = {
           bio: user?.bio || "",
@@ -125,13 +123,14 @@ export default function StudentProfilePage() {
           lastActive: user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "",
         };
 
-        console.log("📝 Fallback profile data:", fallbackData);
         setUserProfile(fallbackData);
         setFormData({
           name: user?.name || "",
           email: user?.email || "",
           ...fallbackData,
         });
+      } finally {
+        setProfileLoading(false);
       }
     };
 
@@ -142,13 +141,6 @@ export default function StudentProfilePage() {
     setIsLoading(true);
 
     try {
-      console.log("💾 Saving profile with data:", {
-        name: formData.name,
-        phone: formData.phone,
-        bio: formData.bio,
-        location: formData.location,
-      });
-      
       // Update user profile using apiClient
       const result = await apiClient.updateStudentProfile({
         name: formData.name,
@@ -157,10 +149,7 @@ export default function StudentProfilePage() {
         location: formData.location || null as any,
       });
 
-      console.log("📊 Save API Response:", result);
-
       if (result.error) {
-        console.error("❌ Save error:", result.error);
         toast({
           title: "Error",
           description: result.error.message || "Failed to update profile",
@@ -174,7 +163,6 @@ export default function StudentProfilePage() {
         const resultAny = result as any; // Temporarily cast to any to access nested data
         if (resultAny.data && resultAny.data.data) {
           const updatedData = resultAny.data.data as User;
-          console.log("✅ Updated data from server:", updatedData);
           
           updateUser({
             name: updatedData.name,
@@ -197,10 +185,7 @@ export default function StudentProfilePage() {
             phone: updatedData.phone || "",
             location: updatedData.location || "",
           }));
-          
-          console.log("🔄 Local state updated");
         } else {
-          console.log("⚠️ Save succeeded but no data returned, refreshing profile...");
           // Refresh profile data after successful save
           setTimeout(() => {
             window.location.reload();
@@ -238,17 +223,21 @@ export default function StudentProfilePage() {
     setIsEditing(false);
   };
 
+  if (profileLoading && showSkeleton) {
+    return <SkeletonProfile />;
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="text-gray-600 mt-1">Manage your account information and preferences</p>
+          <h1 className="section-heading text-3xl">Profile Settings</h1>
+          <p className="text-[var(--text-muted)] mt-1">Manage your account information and preferences</p>
         </div>
         <Button
           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className={isEditing ? "bg-gray-600 hover:bg-gray-700" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"}
+          className={cn("rounded-xl", isEditing ? "bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--border)]" : "")}
           disabled={isLoading}
         >
           {isLoading ? "Saving..." : isEditing ? (
@@ -268,43 +257,43 @@ export default function StudentProfilePage() {
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Profile Card */}
         <div className="lg:col-span-1">
-          <Card className="shadow-xl border-0 overflow-hidden">
-            <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-600" />
+          <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+            <div className="h-1.5 bg-[var(--accent)]" />
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="relative inline-block mb-4">
                   <img
                     src={user?.image || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=96&h=96&fit=crop&crop=face&auto=format"}
                     alt={user?.name}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    className="w-24 h-24 rounded-full object-cover border-4 border-[var(--bg-card)] shadow-sm"
                   />
                   {isEditing && (
                     <Button
                       size="sm"
-                      className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2"
+                      className="absolute bottom-0 right-0 rounded-full p-2"
                     >
                       <Camera className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">{user?.name}</h3>
-                <p className="text-gray-600 mb-4">{user?.email}</p>
-                <Badge className="bg-blue-100 text-blue-800 mb-4">
+                <h3 className="text-xl font-bold text-[var(--text)]">{user?.name}</h3>
+                <p className="text-[var(--text-muted)] mb-4">{user?.email}</p>
+                <Badge className="mb-4 border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text)]">
                   {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Student'}
                 </Badge>
 
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Member Since</span>
-                    <span className="font-medium">{userProfile.memberSince}</span>
+                    <span className="text-[var(--text-muted)]">Member Since</span>
+                    <span className="font-medium text-[var(--text)]">{userProfile.memberSince}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Last Active</span>
-                    <span className="font-medium">{userProfile.lastActive}</span>
+                    <span className="text-[var(--text-muted)]">Last Active</span>
+                    <span className="font-medium text-[var(--text)]">{userProfile.lastActive}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Profile Status</span>
-                    <Badge className="bg-green-100 text-green-800">Active</Badge>
+                    <span className="text-[var(--text-muted)]">Profile Status</span>
+                    <Badge className="border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text)]">Active</Badge>
                   </div>
                 </div>
               </div>
@@ -312,9 +301,9 @@ export default function StudentProfilePage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card className="shadow-lg border-0 mt-6">
+          <Card className="mt-6 border border-[var(--border)] bg-[var(--bg-card)] shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
+              <CardTitle className="text-lg text-[var(--text)]">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button variant="outline" className="w-full justify-start">
@@ -340,11 +329,11 @@ export default function StudentProfilePage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Information */}
-          <Card className="shadow-lg border-0">
-            <div className="h-1 bg-gradient-to-r from-purple-500 to-indigo-600" />
+          <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+            <div className="h-1 bg-[var(--accent)]" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-purple-600" />
+                <UserIcon className="h-5 w-5 text-[var(--text-muted)]" />
                 Personal Information
               </CardTitle>
               <CardDescription>Update your personal details and contact information</CardDescription>
@@ -369,7 +358,7 @@ export default function StudentProfilePage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={true} // Always disabled - email cannot be changed
-                    className="mt-1 bg-gray-50"
+                    className="mt-1 bg-[var(--bg-subtle)]/40"
                   />
                 </div>
                 <div>
@@ -409,11 +398,11 @@ export default function StudentProfilePage() {
           </Card>
 
           {/* Preferences */}
-          <Card className="shadow-lg border-0">
-            <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
+          <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+            <div className="h-1 bg-[var(--accent)]" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-green-600" />
+                <Globe className="h-5 w-5 text-[var(--text-muted)]" />
                 Preferences
               </CardTitle>
               <CardDescription>Customize your learning experience</CardDescription>
@@ -427,7 +416,7 @@ export default function StudentProfilePage() {
                     value={formData.timezone}
                     onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
                     disabled={!isEditing}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-card)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
                   >
                     <option value="PST (UTC-8)">PST (UTC-8)</option>
                     <option value="EST (UTC-5)">EST (UTC-5)</option>
@@ -442,7 +431,7 @@ export default function StudentProfilePage() {
                     value={formData.language}
                     onChange={(e) => setFormData({ ...formData, language: e.target.value })}
                     disabled={!isEditing}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-card)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/40"
                   >
                     <option value="English">English</option>
                     <option value="Spanish">Spanish</option>
@@ -455,11 +444,11 @@ export default function StudentProfilePage() {
           </Card>
 
           {/* Security Settings */}
-          <Card className="shadow-lg border-0">
-            <div className="h-1 bg-gradient-to-r from-orange-500 to-red-600" />
+          <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+            <div className="h-1 bg-[var(--accent)]" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-orange-600" />
+                <Shield className="h-5 w-5 text-[var(--text-muted)]" />
                 Security Settings
               </CardTitle>
               <CardDescription>Manage your account security and privacy</CardDescription>
@@ -467,8 +456,8 @@ export default function StudentProfilePage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
-                  <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                  <h4 className="font-medium text-[var(--text)]">Two-Factor Authentication</h4>
+                  <p className="text-sm text-[var(--text-muted)]">Add an extra layer of security to your account</p>
                 </div>
                 <Button
                   variant={formData.twoFactor ? "default" : "outline"}
@@ -480,8 +469,8 @@ export default function StudentProfilePage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                  <p className="text-sm text-gray-600">Receive updates about your bookings and progress</p>
+                  <h4 className="font-medium text-[var(--text)]">Email Notifications</h4>
+                  <p className="text-sm text-[var(--text-muted)]">Receive updates about your bookings and progress</p>
                 </div>
                 <Button
                   variant={formData.notifications ? "default" : "outline"}
@@ -500,7 +489,7 @@ export default function StudentProfilePage() {
               <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={isLoading} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+              <Button onClick={handleSave} disabled={isLoading} className="rounded-xl">
                 <Save className="h-4 w-4 mr-2" />
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
@@ -512,39 +501,39 @@ export default function StudentProfilePage() {
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-slide-up">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-slide-up shadow-xl">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-2xl border-2 border-[var(--accent)] bg-[var(--bg)] mb-6 shadow-sm">
+                <CheckCircle className="h-8 w-8 text-[var(--text-muted)]" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Updated Successfully!</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="section-heading text-2xl mb-2">Profile updated</h3>
+              <p className="text-[var(--text-muted)] mb-6">
                 Your profile information has been updated and saved successfully.
               </p>
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <h4 className="font-semibold text-gray-900 mb-2">Updated Information:</h4>
-                <div className="space-y-1 text-sm text-gray-600">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)]/40 p-4 mb-6 text-left">
+                <h4 className="font-semibold text-[var(--text)] mb-2">Updated Information</h4>
+                <div className="space-y-1 text-sm text-[var(--text-muted)]">
                   <div className="flex justify-between">
                     <span>Name:</span>
-                    <span className="font-medium text-gray-900">{formData.name || "Not provided"}</span>
+                    <span className="font-medium text-[var(--text)]">{formData.name || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Phone:</span>
-                    <span className="font-medium text-gray-900">{formData.phone || "Not provided"}</span>
+                    <span className="font-medium text-[var(--text)]">{formData.phone || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Location:</span>
-                    <span className="font-medium text-gray-900">{formData.location || "Not provided"}</span>
+                    <span className="font-medium text-[var(--text)]">{formData.location || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between items-start">
                     <span>Bio:</span>
-                    <span className="font-medium text-gray-900 truncate ml-2 max-w-[200px]">{formData.bio || "Not provided"}</span>
+                    <span className="font-medium text-[var(--text)] truncate ml-2 max-w-[200px]">{formData.bio || "Not provided"}</span>
                   </div>
                 </div>
               </div>
               <Button 
                 onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                className="w-full rounded-xl"
               >
                 Got it!
               </Button>

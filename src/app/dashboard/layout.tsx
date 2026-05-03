@@ -4,7 +4,8 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { Navbar } from "@/components/layout/navbar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, User, BarChart3 } from "lucide-react";
+import { Home, Calendar, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
@@ -33,22 +34,23 @@ export default function DashboardLayout({
 
   return (
     <RoleGuard allowedRoles={["STUDENT"]}>
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <nav className="border-b bg-white px-4 py-4 shadow-sm">
+        <nav className="border-b border-[var(--border)] bg-[var(--bg-card)] px-4 py-4">
           <div className="container mx-auto">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-colors border",
                       isActive
-                        ? "bg-blue-600 text-white shadow-md"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-100"
-                    }`}
+                        ? "bg-[var(--accent)] text-[var(--text)] border-[var(--border)]"
+                        : "bg-transparent text-[var(--text-muted)] border-transparent hover:bg-[var(--bg-subtle)] hover:text-[var(--text)] hover:border-[var(--border)]"
+                    )}
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}

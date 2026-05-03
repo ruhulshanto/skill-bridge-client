@@ -1,18 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Clock, User, DollarSign, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  DollarSign,
+  CheckCircle,
+  ChevronRight,
+  Info,
+  ArrowRight,
+} from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import studentService from "@/services/student.service";
-import { API_URL } from "@/config/api";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -61,6 +68,29 @@ export default function BookingModal({ isOpen, onClose, tutor }: BookingModalPro
     "18:00", "18:30", "19:00", "19:30", "20:00", "20:30",
   ];
 
+  const isTimeDisabled = (time: string) => {
+    if (!formData.date) return false;
+
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const selectedDate = new Date(formData.date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    // Only apply time check if the selected date is today
+    if (selectedDate.getTime() === today.getTime()) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+
+      if (hours < currentHours) return true;
+      if (hours === currentHours && minutes <= currentMinutes) return true;
+    }
+
+    return false;
+  };
+
   const generateEndTime = (startTime: string) => {
     const [hours, minutes] = startTime.split(':').map(Number);
     const endHours = hours + 1;
@@ -69,121 +99,123 @@ export default function BookingModal({ isOpen, onClose, tutor }: BookingModalPro
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Only allow dates from today onwards
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const selectedDate = new Date(date);
-      selectedDate.setHours(0, 0, 0, 0);
-      
-      if (selectedDate >= today) {
-        setFormData({ ...formData, date, startTime: "", endTime: "" });
-      }
+      setFormData({ ...formData, date, startTime: "", endTime: "" });
     }
   };
 
   const handleTimeSelect = (startTime: string) => {
+    if (isTimeDisabled(startTime)) return;
     const endTime = generateEndTime(startTime);
     setFormData({ ...formData, startTime, endTime });
   };
 
   const calculatePrice = () => {
     if (!formData.startTime || !formData.endTime) return 0;
-    
-    const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
-    const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
-    
-    const startMinutesTotal = startHours * 60 + startMinutes;
-    const endMinutesTotal = endHours * 60 + endMinutes;
-    const durationHours = (endMinutesTotal - startMinutesTotal) / 60;
-    
-    return durationHours * tutor.rate;
+    return tutor.rate; // Assuming 1 hour fixed for now based on UI
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      alert("Please login to book a session");
-      return;
-    }
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && 'preventDefault' in e) e.preventDefault();
 
-    if (!formData.date || !formData.startTime || !formData.endTime) {
-      alert("Please select date and time for the session");
-      return;
-    }
+    if (!user) return;
+    if (!formData.date || !formData.startTime || !formData.endTime) return;
 
     setIsSubmitting(true);
 
     try {
       const bookingData = {
-        tutorId: tutor.tutorProfile?.id || tutor.id, // Use tutorProfile.id if available
-        date: formData.date.toLocaleDateString('en-CA'), // Use local date format (YYYY-MM-DD)
+        tutorId: tutor.tutorProfile?.id || tutor.id,
+        date: formData.date.toLocaleDateString('en-CA'),
         startTime: formData.startTime,
         endTime: formData.endTime,
         notes: formData.notes,
       };
 
-      console.log("=== BOOKING DEBUG INFO ===");
-      console.log("Sending booking data:", JSON.stringify(bookingData, null, 2));
-      console.log("Tutor data:", JSON.stringify(tutor, null, 2));
-      console.log("User data:", JSON.stringify(user, null, 2));
-      console.log("Full tutor object:", tutor);
-      console.log("Tutor ID type:", typeof tutor.id);
-      console.log("Tutor ID value:", tutor.id);
-      console.log("API URL:", `${API_URL}/api/bookings`);
-      
       await studentService.createBooking(bookingData);
       setBookingSuccess(true);
-      
-      // Reset form after successful booking
-      setTimeout(() => {
-        setBookingSuccess(false);
-        onClose();
-        setFormData({
-          date: undefined,
-          startTime: "",
-          endTime: "",
-          notes: "",
-        });
-      }, 3000);
-      
+
     } catch (error) {
-      console.error("=== BOOKING ERROR ===");
-      console.error("Full error:", error);
-      console.error("Error message:", error instanceof Error ? error.message : 'Unknown error');
-      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
-      
-      alert(`Failed to book session: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+      console.error("Booking error:", error);
+      alert(`Failed to book session: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    setBookingSuccess(false);
+    setFormData({
+      date: undefined,
+      startTime: "",
+      endTime: "",
+      notes: "",
+    });
+    onClose();
+  };
+
   if (bookingSuccess) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <div className="text-center py-8">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[var(--bg-subtle)] via-[var(--accent)] to-[var(--bg-subtle)]" />
+          <div className="px-8 pt-10 pb-2 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border-2 border-[var(--accent)] bg-[var(--bg)] shadow-sm">
+              <CheckCircle className="h-8 w-8 text-[var(--text-muted)]" strokeWidth={1.75} />
             </div>
-            <DialogTitle className="text-xl font-bold text-green-600 mb-2">
-              Booking Successful!
-            </DialogTitle>
-            <p className="text-gray-600 mb-4">
-              Your session with {tutor.name} has been booked successfully.
+            <h2 className="section-heading text-2xl mb-2">Booking confirmed</h2>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              Your session with{" "}
+              <span className="font-semibold text-[var(--text)]">{tutor.name}</span> is on the calendar.
             </p>
-            <p className="text-sm text-gray-500">
-              You can view your booking details in the dashboard.
-            </p>
+          </div>
+
+          <div className="space-y-3 px-8 pb-2">
+            <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]/50 p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)]">
+                <CalendarIcon className="h-4 w-4 text-[var(--text-muted)]" />
+              </span>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                  Date
+                </p>
+                <p className="text-sm font-semibold text-[var(--text)]">
+                  {formData.date && formatDate(formData.date)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]/50 p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)]">
+                <Clock className="h-4 w-4 text-[var(--text-muted)]" />
+              </span>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                  Time
+                </p>
+                <p className="text-sm font-semibold text-[var(--text)]">
+                  {formData.startTime} – {formData.endTime}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 p-8 pt-6">
+            <Button asChild size="lg" className="w-full rounded-xl">
+              <Link href="/dashboard/bookings" onClick={handleClose}>
+                Go to My Bookings <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="ghost" onClick={handleClose} className="w-full rounded-xl text-[var(--text-muted)]">
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -192,224 +224,193 @@ export default function BookingModal({ isOpen, onClose, tutor }: BookingModalPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Book a Session with {tutor.name}</DialogTitle>
+      <DialogContent className="sm:max-w-4xl h-[85vh] max-h-[85vh] p-0 overflow-hidden flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Book a Session with {tutor.name}</DialogTitle>
         </DialogHeader>
+        <div className="flex flex-col md:flex-row h-full w-full overflow-hidden min-h-0">
+          {/* Left Side: Summary & Tutor Info */}
+          <div className="w-full md:w-80 border-r border-[var(--border)] bg-[var(--bg-subtle)] p-6 space-y-8 overflow-y-auto">
+            <div>
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-6">Booking Details</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Tutor Info Card */}
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <img
-                  src={tutor.image || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face&auto=format"}
-                  alt={tutor.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <h3 className="font-semibold">{tutor.name}</h3>
-                  <p className="text-sm text-gray-600">{tutor.subject || "General"}</p>
+              <div className="space-y-4">
+                <div className="flex flex-col items-center p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-sm text-center">
+                  <div className="relative mb-3">
+                    <img
+                      src={tutor.image || `https://i.pravatar.cc/150?u=${tutor.id}`}
+                      alt={tutor.name}
+                      className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--accent)] border-2 border-white rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-3 w-3 text-[#0A2540]" />
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-[var(--text)]">{tutor.name}</h3>
+                  <p className="text-xs font-semibold text-[var(--text-muted)] mb-3">{tutor.subject || "Verified Tutor"}</p>
+                  <Badge variant="secondary" className="border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text)]">
+                    <DollarSign className="h-3 w-3" /> {tutor.rate}/hour
+                  </Badge>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 text-blue-600 font-bold">
-                    <DollarSign className="h-4 w-4" />
-                    {tutor.rate}/hr
+
+                {formData.date && formData.startTime && (
+                  <div className="p-4 rounded-2xl border-2 border-[var(--accent)] bg-[var(--bg-subtle)]/80 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-3 text-[var(--text)]">
+                      <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                        <CalendarIcon className="h-4 w-4 shrink-0" />
+                        <span className="text-xs font-semibold">{formData.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[var(--text-muted)]">
+                        <Clock className="h-4 w-4 shrink-0" />
+                        <span className="text-xs font-semibold">{formData.startTime} – {formData.endTime}</span>
+                      </div>
+                      <div className="pt-2 mt-2 flex justify-between items-center border-t border-[var(--border)]">
+                        <span className="text-xs font-medium text-[var(--text-muted)]">Total</span>
+                        <span className="text-lg font-bold">${calculatePrice()}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]/40 flex gap-3">
+              <Info className="h-5 w-5 text-[var(--text-muted)] shrink-0 mt-0.5" />
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">
+                Confirming means you agree to this tutor&apos;s session rates and availability.
+              </p>
+            </div>
+          </div>
+
+          {/* Right Side: Selection Form */}
+          <div className="flex-1 h-full overflow-y-auto bg-background p-8 pb-40">
+            <div className="space-y-12">
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Schedule your Session</h2>
+                <p className="text-sm text-[var(--text-muted)]">Select your preferred date and time slot.</p>
+              </div>
+              {/* Step 1: Date */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] flex items-center justify-center text-xs font-bold">
+                    1
+                  </div>
+                  <Label className="text-base font-bold text-[var(--text)]">Select Date</Label>
+                </div>
+
+                <div className="flex justify-center">
+                  <div className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden w-fit">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={handleDateSelect}
+                      className="p-4"
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
+                      classNames={{
+                        disabled:
+                          "text-[var(--text-faint)] opacity-45 pointer-events-none line-through decoration-[var(--border)]",
+                        selected:
+                          "border-2 border-[var(--accent)] bg-[var(--bg-subtle)] text-[var(--text)] hover:bg-[var(--border)] rounded-full shadow-sm relative after:content-['✓'] after:absolute after:-top-0.5 after:-right-0.5 after:flex after:h-4 after:w-4 after:items-center after:justify-center after:rounded-full after:bg-[var(--accent)] after:text-[10px] after:font-bold after:text-[#0A2540] after:leading-none after:shadow-sm",
+                        today:
+                          "text-[var(--text-muted)] bg-[var(--bg-card)] rounded-full font-semibold ring-1 ring-[var(--border)]",
+                      }}
+                    />
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Date Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Select Date</Label>
-            
-            {/* Selected Date Display */}
-            {formData.date && (
-              <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <CalendarIcon className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">
-                  Selected: {formData.date.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
+              {/* Step 2: Time */}
+              {formData.date && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] flex items-center justify-center text-xs font-bold">
+                      2
+                    </div>
+                    <Label className="text-base font-bold text-[var(--text)]">Available Time Slots</Label>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {timeSlots.map((time) => {
+                      const disabled = isTimeDisabled(time);
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => handleTimeSelect(time)}
+                          className={cn(
+                            "py-2.5 px-3 rounded-xl text-sm font-semibold transition-all border",
+                            formData.startTime === time
+                              ? "border-2 border-[var(--accent)] bg-[var(--bg-subtle)] text-[var(--text)] shadow-sm"
+                              : disabled
+                                ? "bg-[var(--bg-subtle)]/50 text-[var(--text-faint)] border-[var(--border)] cursor-not-allowed line-through opacity-60"
+                                : "bg-[var(--bg-card)] text-[var(--text)] border-[var(--border)] hover:border-[var(--accent)] hover:bg-[var(--bg-subtle)]"
+                          )}
+                        >
+                          {time}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {isTimeDisabled(timeSlots[0]) && (
+                    <p className="text-[10px] text-[var(--text-muted)] italic">
+                      Past slots today are faded and cannot be selected.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Notes */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] flex items-center justify-center text-xs font-bold">
+                    3
+                  </div>
+                  <Label className="text-base font-bold text-[var(--text)]">Message for Tutor</Label>
+                </div>
+                <Textarea
+                  placeholder="Example: I'd like to focus on React Hooks and State management..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="rounded-xl min-h-[100px] border-[var(--border)] bg-[var(--bg-card)] focus-visible:border-[var(--accent)] focus-visible:ring-[var(--accent)]/30"
+                />
               </div>
-            )}
-            
-            <div className="border rounded-md p-3">
-              <Calendar
-                mode="single"
-                selected={formData.date}
-                onSelect={handleDateSelect}
-                disabled={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const selectedDate = new Date(date);
-                  selectedDate.setHours(0, 0, 0, 0);
-                  return selectedDate < today;
-                }}
-                className="w-full rounded-lg border-2 border-blue-200"
-                modifiers={{
-                  disabled: (date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const selectedDate = new Date(date);
-                    selectedDate.setHours(0, 0, 0, 0);
-                    return selectedDate < today;
-                  }
-                }}
-                modifiersStyles={{
-                  disabled: { 
-                    opacity: 0.3, 
-                    textDecoration: 'line-through',
-                    cursor: 'not-allowed',
-                    backgroundColor: '#f3f4f6'
-                  },
-                  selected: {
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    border: '2px solid #1d4ed8',
-                    borderRadius: '50%'
-                  },
-                  today: {
-                    backgroundColor: '#fef3c7',
-                    border: '2px solid #f59e0b',
-                    fontWeight: 'bold'
-                  }
-                }}
-                styles={{
-                  caption: { 
-                    color: '#1f2937', 
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                    marginBottom: '8px'
-                  },
-                  head_cell: {
-                    color: '#6b7280',
-                    fontWeight: '600',
-                    fontSize: '12px',
-                    textTransform: 'uppercase'
-                  },
-                  cell: {
-                    height: '36px',
-                    width: '36px',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  },
-                  nav_button: {
-                    backgroundColor: '#f3f4f6',
-                    color: '#374151',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    padding: '4px 8px',
-                    fontWeight: '500'
-                  },
-                  nav_button_previous: {
-                    marginRight: '8px'
-                  },
-                  nav_button_next: {
-                    marginLeft: '8px'
-                  }
-                }}
-              />
+
+              <DialogFooter className="pt-4 gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onClose}
+                  className="rounded-xl px-8"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-xl px-8 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={!formData.date || !formData.startTime || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Confirm Booking <ChevronRight className="h-4 w-4" />
+                    </span>
+                  )}
+                </Button>
+              </DialogFooter>
             </div>
-            <p className="text-xs text-gray-500 flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              Past dates are disabled for booking
-            </p>
           </div>
-
-          {/* Time Selection */}
-          {formData.date && (
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Select Time</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {timeSlots.map((time) => (
-                  <Button
-                    key={time}
-                    type="button"
-                    variant={formData.startTime === time ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleTimeSelect(time)}
-                    className="text-sm"
-                  >
-                    {time}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Session Details */}
-          {formData.startTime && (
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-green-800">Session Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Date:</span>
-                  <span className="font-medium">
-                    {formData.date && formatDate(formData.date)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Time:</span>
-                  <span className="font-medium">
-                    {formData.startTime} - {formData.endTime}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Duration:</span>
-                  <span className="font-medium">1 hour</span>
-                </div>
-                <div className="flex justify-between text-sm font-bold text-green-800">
-                  <span>Total Price:</span>
-                  <span>${calculatePrice()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Tell the tutor what you'd like to learn or any specific topics..."
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={!formData.date || !formData.startTime || isSubmitting}
-            >
-              {isSubmitting ? "Booking..." : `Book Session - $${calculatePrice()}`}
-            </Button>
-          </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

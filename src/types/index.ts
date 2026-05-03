@@ -23,6 +23,7 @@ export interface TutorProfile {
   education?: string;
   rating: number;
   totalReviews: number;
+  isVerified: boolean;
   user?: User;
   subjects?: TutorSubject[];
 }

@@ -1,42 +1,71 @@
 import { Container } from "@/components/ui/container";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Globe, Award, Target, BookOpen, Star, ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { Users, Globe, Award, Target, BookOpen, Star, ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export default function AboutPage() {
   return (
-    <div className="bg-background">
+    <div className="bg-background min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32">
-        {/* Background Decorations */}
-        <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
-          <div className="absolute left-1/3 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          <div className="absolute right-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-blue-500/10 opacity-30 blur-[120px]"></div>
+      <section className="relative pt-8 pb-16 lg:pt-12 lg:pb-24 overflow-hidden">
+        {/* Ambient Background Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+          <div 
+            className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-20 dark:opacity-30"
+            style={{ backgroundColor: "var(--accent)" }}
+          />
+          <div 
+            className="absolute bottom-[-5%] left-[-5%] w-[40%] h-[40%] rounded-full blur-[100px] opacity-10 dark:opacity-20"
+            style={{ backgroundColor: "#3b82f6" }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-[0.15]" />
         </div>
 
-        <Container className="text-center relative z-10">
-          <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm rounded-full backdrop-blur-sm bg-muted/50 border-primary/20">
-            <Sparkles className="w-3 h-3 mr-2 text-primary fill-primary" />
-            Empowering the Future of Education
-          </Badge>
+        <Container className="relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-[11px] font-bold uppercase tracking-[0.15em] animate-fade-in"
+              style={{
+                backgroundColor: "var(--bg-subtle)",
+                border: "1px solid var(--border)",
+                color: "var(--text-muted)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full animate-pulse"
+                style={{ backgroundColor: "var(--accent)" }}
+              />
+              Our Mission & Vision
+            </div>
 
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl mb-6">
-            Redefining How the <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">World Learns</span>
-          </h1>
+            <h1 className="section-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-8 leading-[1.05]">
+              Empowering the World Through <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-blue-500">
+                Borderless Learning
+              </span>
+            </h1>
 
-          <p className="max-w-2xl mx-auto text-xl text-muted-foreground mb-10 leading-relaxed">
-            Connect with expert mentors, master new skills, and unlock your full potential.
-            We're building a global community where knowledge knows no boundaries.
-          </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+              We're on a mission to democratize education by connecting every curious mind with world-class mentors. 
+              Knowledge shouldn't have boundaries, and neither should your potential.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button asChild size="lg" className="rounded-xl h-14 px-8 font-bold text-base transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20" style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}>
+                <Link href="/tutors">Explore Tutors <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-xl h-14 px-8 font-bold text-base bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all">
+                <Link href="/register">Join the Community</Link>
+              </Button>
+            </div>
+          </div>
         </Container>
       </section>
 
       {/* Stats Section */}
-      <section className="border-y bg-muted/30 py-12">
+      <section className="py-12 border-y" style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-card)" }}>
         <Container>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
@@ -46,11 +75,14 @@ export default function AboutPage() {
               { label: "Student Satisfaction", value: "99%", icon: Star },
             ].map((stat, idx) => (
               <div key={idx} className="flex flex-col items-center justify-center text-center group">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <stat.icon className="h-6 w-6 text-primary" />
+                <div 
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm"
+                  style={{ backgroundColor: "var(--bg-subtle)", border: "1px solid var(--border)" }}
+                >
+                  <stat.icon className="h-6 w-6" style={{ color: "var(--accent)" }} />
                 </div>
-                <h3 className="text-3xl font-bold tracking-tight mb-1">{stat.value}</h3>
-                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{stat.label}</p>
+                <h3 className="text-3xl font-bold tracking-tight mb-1" style={{ color: "var(--text)" }}>{stat.value}</h3>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -58,52 +90,68 @@ export default function AboutPage() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="py-20 lg:py-32">
+      <section className="py-24 lg:py-32 relative overflow-hidden">
         <Container>
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors group">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardHeader>
-                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
-                  <Target className="h-7 w-7 text-blue-600" />
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
+            <div className="relative group">
+              <div 
+                className="absolute -inset-4 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                style={{ backgroundColor: "var(--bg-subtle)" }}
+              />
+              <div className="space-y-6">
+                <div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-8 shadow-inner"
+                  style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
+                >
+                  <Target className="h-8 w-8" style={{ color: "var(--accent)" }} />
                 </div>
-                <CardTitle className="text-2xl font-bold">Our Mission</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-lg text-muted-foreground text-foreground/80 leading-relaxed">
+                <h2 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>Our Mission</h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
                   To democratize education by connecting every learner with the perfect tutor,
                   making quality personal learning accessible to everyone, everywhere, regardless of their background or location.
-                </CardDescription>
-              </CardContent>
-            </Card>
-
-            <Card className="relative overflow-hidden border-2 hover:border-blue-500/50 transition-colors group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <CardHeader>
-                <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
-                  <Globe className="h-7 w-7 text-blue-600" />
+                </p>
+                <div className="pt-4 flex items-center gap-2 text-sm font-bold" style={{ color: "var(--accent)" }}>
+                   <span className="h-1 w-8 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
+                   Accessibility First
                 </div>
-                <CardTitle className="text-2xl font-bold">Our Vision</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-lg text-muted-foreground text-foreground/80 leading-relaxed">
+              </div>
+            </div>
+
+            <div className="relative group">
+              <div 
+                className="absolute -inset-4 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                style={{ backgroundColor: "var(--bg-subtle)" }}
+              />
+              <div className="space-y-6">
+                <div 
+                  className="h-16 w-16 rounded-2xl flex items-center justify-center mb-8 shadow-inner"
+                  style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
+                >
+                  <Globe className="h-8 w-8" style={{ color: "var(--accent)" }} />
+                </div>
+                <h2 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>Our Vision</h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
                   We envision a future where quality education is borderless. We strive to become the world's leading platform where technology and specialized human connection merge to foster lifelong learning.
-                </CardDescription>
-              </CardContent>
-            </Card>
+                </p>
+                <div className="pt-4 flex items-center gap-2 text-sm font-bold" style={{ color: "var(--accent)" }}>
+                   <span className="h-1 w-8 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
+                   Global Connection
+                </div>
+              </div>
+            </div>
           </div>
         </Container>
       </section>
 
       {/* What We Offer */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-24 lg:py-32" style={{ backgroundColor: "var(--bg-card)" }}>
         <Container>
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">What We Offer</h2>
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="section-heading text-3xl sm:text-4xl md:text-5xl mb-6" style={{ color: "var(--text)" }}>What We Offer</h2>
             <p className="text-lg text-muted-foreground">Comprehensive learning solutions designed for your success. We provide the tools you need to excel.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { icon: ShieldCheck, title: "Verified Expert Tutors", desc: "Rigorous screening ensures you learn from the best in the field." },
               { icon: Sparkles, title: "Personalized Learning", desc: "1-on-1 sessions tailored specifically to your unique goals and pace." },
@@ -112,68 +160,98 @@ export default function AboutPage() {
               { icon: Star, title: "Quality Assurance", desc: "Continuous monitoring ensures the highest educational standards." },
               { icon: Target, title: "Goal-Oriented", desc: "Structured paths to help you achieve specific academic milestones." },
             ].map((item, idx) => (
-              <Card key={idx} className="bg-background border-none shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <item.icon className="h-10 w-10 text-primary mb-2 opacity-80" />
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    {item.desc}
-                  </p>
-                </CardContent>
-              </Card>
+              <div 
+                key={idx} 
+                className="group p-8 rounded-[2rem] transition-all duration-300 hover:-translate-y-2"
+                style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
+              >
+                <div 
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center mb-8 transition-transform duration-500 group-hover:rotate-[360deg]"
+                  style={{ backgroundColor: "var(--bg-subtle)", border: "1px solid var(--border)" }}
+                >
+                  <item.icon className="h-6 w-6" style={{ color: "var(--accent)" }} />
+                </div>
+                <h3 className="text-xl font-bold mb-4" style={{ color: "var(--text)" }}>{item.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
             ))}
           </div>
         </Container>
       </section>
 
       {/* Why Choose Us */}
-      <section className="py-20 lg:py-32">
+      <section className="py-24 lg:py-32">
         <Container>
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Why Learners Choose SkillBridge?</h2>
-              <p className="text-lg text-muted-foreground">
-                We're different. We don't just connect you; we support your entire journey from the first click to the final exam ace.
-              </p>
-
-              <div className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+            <div className="space-y-10">
+              <div>
+                <h2 className="section-heading text-3xl sm:text-4xl md:text-5xl mb-6" style={{ color: "var(--text)" }}>Why Learners Choose SkillBridge?</h2>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  We're different. We don't just connect you; we support your entire journey from the first click to the final exam ace.
+                </p>
+              </div>
+ 
+              <div className="space-y-4">
                 {[
                   "Proven Track Record with thousands of success stories.",
-                  "Advanced platform features for a seamless video checkout.",
+                  "Advanced platform features for a seamless learning flow.",
                   "Affordable pricing models that respect your budget.",
                   "24/7 Priority Support whenever you need assistance.",
                   "Vibrant community of learners for peer motivation."
                 ].map((text, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border border-transparent hover:border-primary/20 transition-colors">
-                    <div className="mt-1 bg-green-500/10 p-1 rounded-full">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <div key={i} className="flex items-start gap-4 p-5 rounded-2xl transition-all duration-300 hover:bg-white/5 group" style={{ border: "1px solid var(--border)" }}>
+                    <div className="mt-1 p-1 rounded-full flex-shrink-0" style={{ backgroundColor: "rgba(34,197,94,0.1)" }}>
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
                     </div>
-                    <span className="font-medium">{text}</span>
+                    <span className="font-semibold text-[15px]" style={{ color: "var(--text)" }}>{text}</span>
                   </div>
                 ))}
               </div>
             </div>
+
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-blue-500/20 rounded-3xl blur-3xl transform rotate-3"></div>
-              <div className="relative bg-background rounded-3xl border shadow-2xl p-8 space-y-8">
-                <div className="flex items-center gap-4 border-b pb-6">
-                  <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <Star className="h-6 w-6 text-yellow-600 fill-yellow-600" />
+              {/* Background Glow */}
+              <div 
+                className="absolute -inset-10 rounded-full blur-[100px] opacity-20 -z-10"
+                style={{ backgroundColor: "var(--accent)" }}
+              />
+              
+              <div 
+                className="relative p-1 rounded-[2.5rem] overflow-hidden"
+                style={{ background: "linear-gradient(135deg, var(--border), transparent, var(--border))" }}
+              >
+                <div className="relative bg-background rounded-[2.4rem] p-8 md:p-12 space-y-10">
+                  <div className="flex items-center gap-5 border-b pb-8" style={{ borderColor: "var(--border)" }}>
+                    <div 
+                      className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-lg"
+                      style={{ backgroundColor: "var(--bg-subtle)", border: "1px solid var(--border)" }}
+                    >
+                      <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-xl tracking-tight" style={{ color: "var(--text)" }}>Student Success</h3>
+                      <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Rated 4.9/5 globally</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg">Student Success</h3>
-                    <p className="text-sm text-muted-foreground">Rated 4.9/5 by our community</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <p className="italic text-muted-foreground text-lg">
-                    "SkillBridge completely transformed my approach to learning. The verified tutors are top-notch!"
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200"></div>
-                    <div className="font-semibold">Alex Thompson</div>
+
+                  <div className="space-y-6">
+                    <p className="italic text-xl md:text-2xl font-medium leading-relaxed" style={{ color: "var(--text)" }}>
+                      "SkillBridge completely transformed my approach to learning. The verified tutors are top-notch and the platform is incredibly intuitive!"
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <img 
+                        src="https://i.pravatar.cc/100?img=12" 
+                        alt="Alex Thompson" 
+                        className="h-14 w-14 rounded-full object-cover border-2"
+                        style={{ borderColor: "var(--accent)" }}
+                      />
+                      <div>
+                        <div className="font-black text-lg" style={{ color: "var(--text)" }}>Alex Thompson</div>
+                        <div className="text-sm font-bold text-muted-foreground">Master's Student, Oxford</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -182,80 +260,71 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* CTA Section - Using Homepage Design */}
-      <section className="py-24 relative overflow-hidden bg-slate-50">
-            {/* Background Decoration: Subtle Gradient Blobs */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/30 rounded-full blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-200/30 rounded-full blur-[100px]" />
+      {/* CTA Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-background -z-10" />
+        <Container className="relative z-10">
+          <div 
+            className="max-w-5xl mx-auto rounded-[3rem] p-8 md:p-20 text-center relative overflow-hidden"
+            style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border)" }}
+          >
+            {/* Background elements */}
+            <div 
+              className="absolute top-0 right-0 w-64 h-64 rounded-full blur-[80px] opacity-10"
+              style={{ backgroundColor: "var(--accent)" }}
+            />
+            <div 
+              className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-[80px] opacity-10"
+              style={{ backgroundColor: "#3b82f6" }}
+            />
+
+            <div className="space-y-8 max-w-3xl mx-auto relative z-10">
+              <div 
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
+                style={{ backgroundColor: "var(--bg-subtle)", color: "var(--text-muted)", border: "1px solid var(--border)" }}
+              >
+                <Sparkles className="h-3 w-3" style={{ color: "var(--accent)" }} />
+                <span>Start your transformation</span>
+              </div>
+
+              <h2 className="section-heading text-4xl md:text-5xl lg:text-6xl" style={{ color: "var(--text)" }}>
+                Ready to Start Your <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-blue-400">
+                  Learning Journey?
+                </span>
+              </h2>
+
+              <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                Join thousands of students who are already transforming their lives through quality education.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-10">
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-14 px-10 text-base font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/20"
+                  style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+                >
+                  <Link href="/register">
+                    Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="h-14 px-10 text-base font-bold rounded-xl bg-white/5 backdrop-blur-md border-white/10 hover:bg-white/10 transition-all duration-300"
+                >
+                  <Link href="/tutors">
+                    Explore Tutors
+                  </Link>
+                </Button>
+              </div>
             </div>
-
-            {/* Background Pattern: Grid */}
-            <div className="absolute inset-0 z-0 opacity-[0.03]"
-                style={{
-                    backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }}>
-            </div>
-
-            <Container className="relative z-10">
-                <div className="max-w-5xl mx-auto rounded-[2.5rem] bg-white/60 backdrop-blur-xl border border-white/50 shadow-2xl p-8 md:p-16 text-center transform hover:scale-[1.01] transition-transform duration-500">
-
-                    <div className="space-y-6 max-w-3xl mx-auto">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-medium mb-4">
-                            <Sparkles className="h-3.5 w-3.5 fill-current" />
-                            <span>Start your transformation today</span>
-                        </div>
-
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-                            Ready to Start Your <br />
-                            <span className="relative inline-block mt-2">
-                                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-400">
-                                    Learning Journey?
-                                </span>
-                                {/* Decorative underline */}
-                                <svg className="absolute -bottom-2 lg:-bottom-4 left-0 w-full h-3 text-sky-200 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
-                                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="12" fill="none" opacity="0.6" />
-                                </svg>
-                            </span>
-                        </h2>
-
-                        <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                            Join thousands of students who are already transforming their lives through quality education.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-                            <Button
-                                asChild
-                                size="lg"
-                                className="h-14 px-8 text-base font-semibold rounded-full bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-300 transform hover:-translate-y-1"
-                            >
-                                <Link href="/register">
-                                    Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
-                                </Link>
-                            </Button>
-                            <Button
-                                asChild
-                                size="lg"
-                                variant="outline"
-                                className="h-14 px-8 text-base font-semibold rounded-full border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 transition-all duration-300"
-                            >
-                                <Link href="/tutors">
-                                    Explore Tutors
-                                </Link>
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </Container>
+          </div>
+        </Container>
       </section>
     </div>
   );
 }
 
-// Helper icon component for specific needs
-function Clock({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-  )
-}

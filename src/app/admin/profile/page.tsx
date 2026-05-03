@@ -1,22 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
-import { Mail, Phone, Shield, User, Edit2, Save, X, Clock, CheckCircle, MapPin, Sparkles, Check } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Mail, Phone, Shield, User as UserIcon, Edit2, MapPin, Sparkles, Check } from "lucide-react";
+import { toast } from "sonner";
 import { apiClient } from "@/lib/api";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export default function AdminProfilePage() {
   const { user, checkAuth, updateUser } = useAuth();
-  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -27,20 +24,16 @@ export default function AdminProfilePage() {
     bio: "",
     location: "",
   });
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Fetch detailed profile data on mount
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setIsFetching(true);
-        console.log("🔍 Fetching detailed admin profile...");
         const response = await apiClient.getAdminProfile();
 
         if (response.data) {
           const profileData = response.data;
-          console.log("👤 Admin data fetched:", profileData);
-
           setFormData({
             name: profileData.name || "",
             email: profileData.email || "",
@@ -48,8 +41,6 @@ export default function AdminProfilePage() {
             bio: profileData.bio || "",
             location: profileData.location || "",
           });
-
-          // Sync auth context with full data
           updateUser(profileData);
         }
       } catch (error) {
@@ -62,21 +53,29 @@ export default function AdminProfilePage() {
     fetchProfile();
   }, []);
 
-  // Update form data if user context changes (e.g. from logout/login)
+  // Sync form data when user changes (only on initial load)
   useEffect(() => {
-    if (user && !isEditing) {
-      setFormData(prev => ({
-        ...prev,
+    if (user && !isEditing && !formData.name) {
+      setFormData({
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
         bio: user.bio || "",
         location: user.location || "",
-      }));
+      });
     }
-  }, [user, isEditing]);
+  }, [user, isEditing, formData.name]);
 
   const handleEdit = () => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        bio: user.bio || "",
+        location: user.location || "",
+      });
+    }
     setIsEditing(true);
   };
 
@@ -97,64 +96,48 @@ export default function AdminProfilePage() {
     try {
       setIsLoading(true);
 
-      // Only send changed fields (exclude empty strings)
-      const updateData: any = {};
-      if (formData.name.trim()) updateData.name = formData.name.trim();
-      updateData.phone = formData.phone.trim();
-      updateData.bio = formData.bio.trim();
-      updateData.location = formData.location.trim();
+      const updateData: any = {
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        bio: formData.bio.trim(),
+        location: formData.location.trim(),
+      };
 
-      console.log("🔍 Updating admin profile with data:", updateData);
       const response = await apiClient.updateAdminProfile(updateData);
-      console.log("📊 API Response:", response);
 
-      const responseAny = response as any;
-      if (responseAny && (responseAny.data || responseAny.status === 200)) {
-        // Correctly handle nested data based on inspect log { data: { data: { ... } } }
-        const serverData = responseAny.data?.data || responseAny.data;
-
-        // Final fallback to updateData if server returns nothing
-        const finalData = serverData || updateData;
-
-        console.log("✅ Final data to update:", finalData);
-
-        // IMPORTANT: Update local user state immediately for dynamic UI update
-        // We MUST use the spread operator to trigger a new object reference
-        updateUser({
-          ...user,
-          ...finalData,
-          name: finalData.name || user?.name || "",
-          phone: finalData.phone || user?.phone || "",
-          bio: finalData.bio || user?.bio || "",
-          location: finalData.location || user?.location || "",
+      if (response.data) {
+        // 1. Update local state with fresh data from server
+        const updatedUser = response.data;
+        updateUser(updatedUser);
+        
+        setFormData({
+          name: updatedUser.name || "",
+          email: updatedUser.email || "",
+          phone: updatedUser.phone || "",
+          bio: updatedUser.bio || "",
+          location: updatedUser.location || "",
         });
 
-        // Show success modal
-        setShowSuccessModal(true);
-        setIsEditing(false);
+        // 2. Synchronize the session to be absolutely sure
+        await checkAuth();
 
-        // DO NOT call checkAuth() immediately as it might fetch cached stale session
-        // Instead, we just trust the updateUser call which refreshes all context consumers
+        toast.success("Identity Secured", {
+          description: "Your profile has been updated successfully.",
+        });
+
+        setIsEditing(false);
       } else {
-        throw new Error("Failed to update profile");
+        throw new Error(response.error?.message || "Failed to update profile");
       }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (isFetching && !user) {
@@ -170,294 +153,237 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            Account <span className="text-blue-600">Overview</span>
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg">Manage your administrator profile and secure settings</p>
-        </div>
-        <div className="flex gap-3">
-          {!isEditing ? (
-            <Button
-              onClick={handleEdit}
-              className="bg-white text-gray-900 border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-200 shadow-sm transition-all duration-200 h-12 px-6 rounded-xl group"
-            >
-              <Edit2 className="h-4 w-4 mr-2 text-blue-600 group-hover:scale-110 transition-transform" />
-              Edit Profile
-            </Button>
-          ) : (
-            <>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 pb-20">
+      {/* ── Header ── */}
+      <div 
+        className="relative overflow-hidden rounded-[2.5rem] border border-[#a3c7e6] p-8 md:p-10 shadow-xl"
+        style={{ backgroundColor: "#e5f2ff" }}
+      >
+        <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-[#a3c7e6] text-[#2d6a9f] text-[10px] font-black uppercase tracking-widest shadow-sm mb-4">
+               <Shield className="h-3.5 w-3.5" />
+               Security & Identity
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-[#0A2540] mb-2">Admin Profile</h1>
+            <p className="text-[#2d6a9f] font-medium max-w-xl">
+              Manage your administrative identity and system-wide credentials. Ensure your contact information is up to date.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            {!isEditing ? (
               <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isLoading}
-                className="h-12 px-6 rounded-xl"
+                onClick={handleEdit}
+                className="rounded-xl h-14 px-8 font-black text-xs uppercase tracking-widest bg-white border border-[#a3c7e6] text-[#2d6a9f] hover:bg-[#CCE7FF] shadow-sm transition-all"
               >
-                Cancel
+                <Edit2 className="h-4 w-4 mr-2" />
+                Modify Profile
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 h-12 px-8 rounded-xl transition-all duration-200"
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 animate-spin" />
-                    Saving...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                  </div>
-                )}
-              </Button>
-            </>
-          )}
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={handleCancel}
+                  disabled={isLoading}
+                  className="rounded-xl h-14 px-6 font-black text-xs uppercase tracking-widest text-[#2d6a9f] hover:bg-white/50 transition-all"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="rounded-xl h-14 px-8 font-black text-xs uppercase tracking-widest bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+                >
+                  {isLoading ? "Saving Changes..." : "Save Identity"}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Profile Card */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="overflow-hidden border-0 shadow-2xl rounded-3xl bg-white">
-            <div className="h-32 bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 relative">
+        <div className="lg:col-span-1 space-y-8">
+          <div 
+            className="overflow-hidden rounded-[2.5rem] border border-[#a3c7e6] shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <div className="h-32 bg-gradient-to-br from-[#86C6FF] to-[#0A2540] relative">
               <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px]" />
-              <div className="absolute top-4 right-4 text-white/50">
-                <Shield className="h-12 w-12" />
-              </div>
             </div>
-            <CardContent className="relative px-6 pb-8">
+            <div className="relative px-8 pb-10">
               <div className="flex flex-col items-center -mt-16 text-center">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                  <div className="absolute -inset-2 bg-primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <Avatar className="h-32 w-32 border-[6px] border-white shadow-2xl relative">
                     <AvatarImage src={user?.image} alt={user?.name} className="object-cover" />
-                    <AvatarFallback className="text-4xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold">
+                    <AvatarFallback className="text-4xl bg-white text-primary font-black">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute bottom-2 right-2 h-7 w-7 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
-                    <Check className="h-3 w-3 text-white" />
+                  <div className="absolute bottom-2 right-2 h-8 w-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                    <Check className="h-3.5 w-3.5 text-white" />
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-1">
-                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{user?.name}</h2>
-                  <p className="text-blue-600 font-semibold text-sm uppercase tracking-widest flex items-center justify-center gap-1">
+                <div className="mt-6 space-y-1">
+                  <h2 className="text-2xl font-black text-[#0A2540] tracking-tight">{user?.name}</h2>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest mt-2">
                     <Sparkles className="h-3 w-3" />
-                    System Administrator
-                  </p>
+                    Root Administrator
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-2 mt-6">
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 px-3 py-1 rounded-full text-xs font-semibold">
-                    <Shield className="h-3 w-3 mr-1" /> Admin
-                  </Badge>
-                  <Badge className="bg-green-50 text-green-700 border-green-100 px-3 py-1 rounded-full text-xs font-semibold">
-                    {user?.status || "ACTIVE"}
-                  </Badge>
-                </div>
-
-                <div className="w-full mt-8 pt-6 border-t border-gray-50 grid grid-cols-2 gap-4">
+                <div className="w-full mt-10 pt-8 border-t border-[#a3c7e6]/30 grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Created</p>
-                    <p className="text-sm font-bold text-gray-700 mt-1">
+                    <p className="text-[10px] text-[#2d6a9f] font-black uppercase tracking-wider mb-1">Tenure</p>
+                    <p className="text-sm font-black text-[#0A2540]">
                       {user?.createdAt ? new Date(user.createdAt).getFullYear() : "2024"}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Access</p>
-                    <p className="text-sm font-bold text-gray-700 mt-1">Root</p>
+                    <p className="text-[10px] text-[#2d6a9f] font-black uppercase tracking-wider mb-1">Status</p>
+                    <Badge className="bg-emerald-500 text-white border-0 px-3 py-0.5 text-[9px] font-black uppercase tracking-tighter">
+                      Authorized
+                    </Badge>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Contact Details Card */}
-          <Card className="border-0 shadow-lg rounded-3xl">
-            <CardHeader className="pb-3 px-6">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Mail className="h-4 w-4 text-blue-600" />
-                Contact Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-6 space-y-4">
-              <div className="flex items-center gap-3 group">
-                <div className="h-9 w-9 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                  <Mail className="h-4 w-4 text-gray-400 group-hover:text-blue-600" />
+          <div 
+            className="rounded-[2.5rem] border border-[#a3c7e6] p-8 shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <h3 className="text-xs font-black text-[#2d6a9f] uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Verified Contact
+            </h3>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 bg-white rounded-xl border border-[#a3c7e6] flex items-center justify-center shrink-0">
+                  <Mail className="h-4 w-4 text-primary" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Email</p>
-                  <p className="text-sm font-medium text-gray-700 truncate">{user?.email}</p>
-                </div>
-                {user?.emailVerified && <CheckCircle className="h-4 w-4 text-green-500" />}
-              </div>
-
-              <div className="flex items-center gap-3 group">
-                <div className="h-9 w-9 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                  <Phone className="h-4 w-4 text-gray-400 group-hover:text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Phone</p>
-                  <p className="text-sm font-medium text-gray-700">{user?.phone || "Not Set"}</p>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-[#2d6a9f] font-black uppercase tracking-tight mb-0.5">Primary Email</p>
+                  <p className="text-xs font-bold text-[#0A2540] truncate">{user?.email}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 group">
-                <div className="h-9 w-9 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                  <MapPin className="h-4 w-4 text-gray-400 group-hover:text-blue-600" />
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 bg-white rounded-xl border border-[#a3c7e6] flex items-center justify-center shrink-0">
+                  <Phone className="h-4 w-4 text-primary" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Location</p>
-                  <p className="text-sm font-medium text-gray-700">{user?.location || "Not Set"}</p>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-[#2d6a9f] font-black uppercase tracking-tight mb-0.5">Direct Line</p>
+                  <p className="text-xs font-bold text-[#0A2540]">{user?.phone || "Not Configured"}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 bg-white rounded-xl border border-[#a3c7e6] flex items-center justify-center shrink-0">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-[#2d6a9f] font-black uppercase tracking-tight mb-0.5">Location</p>
+                  <p className="text-xs font-bold text-[#0A2540]">{user?.location || "Global Remote"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Right Column - Edit/Details */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden min-h-full">
-            <div className="h-2 bg-gradient-to-r from-blue-600 to-indigo-600" />
-            <CardHeader className="px-8 pt-8">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-blue-50 rounded-2xl flex items-center justify-center">
-                  <User className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl font-bold text-gray-900 tracking-tight">Personal Information</CardTitle>
-                  <CardDescription className="text-gray-500">Update your account name and description</CardDescription>
-                </div>
+        {/* Right Column - Edit Form */}
+        <div className="lg:col-span-2 space-y-8">
+          <div 
+            className="rounded-[2.5rem] border border-[#a3c7e6] p-10 shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <div className="flex items-center gap-4 mb-10">
+              <div className="h-14 w-14 bg-white rounded-2xl border border-[#a3c7e6] flex items-center justify-center shadow-sm">
+                <UserIcon className="h-7 w-7 text-primary" />
               </div>
-            </CardHeader>
-            <CardContent className="px-8 pb-8 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-bold text-gray-500 uppercase tracking-wider">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
-                      disabled={!isEditing}
-                      className={cn(
-                        "h-12 pl-11 rounded-xl border-gray-100 bg-gray-50/50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium",
-                        isEditing && "bg-white border-gray-200"
-                      )}
-                      placeholder="e.g. Ruhul Amin Shanto"
-                    />
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-2xl font-black text-[#0A2540] tracking-tight">Identity Settings</h3>
+                <p className="text-sm font-bold text-[#2d6a9f] opacity-70 uppercase tracking-widest">Core personal and professional metadata</p>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-bold text-gray-500 uppercase tracking-wider">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      disabled={!isEditing}
-                      className={cn(
-                        "h-12 pl-11 rounded-xl border-gray-100 bg-gray-50/50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium",
-                        isEditing && "bg-white border-gray-200"
-                      )}
-                      placeholder="+880 1234 5678"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="location" className="text-sm font-bold text-gray-500 uppercase tracking-wider">Living Location</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
-                      disabled={!isEditing}
-                      className={cn(
-                        "h-12 pl-11 rounded-xl border-gray-100 bg-gray-50/50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium",
-                        isEditing && "bg-white border-gray-200"
-                      )}
-                      placeholder="City, Country"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="bio" className="text-sm font-bold text-gray-500 uppercase tracking-wider">About Me / Bio</Label>
-                  <textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange("bio", e.target.value)}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label htmlFor="name" className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-widest">Legal Name</Label>
+                <div className="relative">
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2d6a9f]" />
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     disabled={!isEditing}
-                    rows={4}
                     className={cn(
-                      "w-full p-4 rounded-xl border border-gray-100 bg-gray-50/50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium resize-none",
-                      isEditing && "bg-white border-gray-200"
+                      "h-14 pl-12 rounded-2xl border-[#a3c7e6] bg-white transition-all text-[#0A2540] font-bold shadow-sm",
+                      !isEditing && "opacity-60 bg-white/50 cursor-not-allowed border-dashed"
                     )}
-                    placeholder="Briefly describe your role and background..."
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
 
-      {/* Refined Success Modal - Standard, Fancy & Professional */}
-      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md border-0 p-8 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] animate-in zoom-in duration-300">
-          <div className="flex flex-col items-center text-center">
-            {/* Elegant Success Icon */}
-            <div className="relative mb-6">
-              <div className="absolute inset-0 bg-green-100 rounded-full scale-150 blur-xl opacity-20 animate-pulse" />
-              <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center relative border border-green-100 shadow-sm">
-                <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center shadow-lg border border-green-50">
-                  <CheckCircle className="h-8 w-8 text-green-500 animate-in bounce-in duration-700" />
+              <div className="space-y-3">
+                <Label htmlFor="phone" className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-widest">Contact Phone</Label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2d6a9f]" />
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    disabled={!isEditing}
+                    className={cn(
+                      "h-14 pl-12 rounded-2xl border-[#a3c7e6] bg-white transition-all text-[#0A2540] font-bold shadow-sm",
+                      !isEditing && "opacity-60 bg-white/50 cursor-not-allowed border-dashed"
+                    )}
+                  />
                 </div>
               </div>
-            </div>
 
-            <h3 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">
-              Profile Updated Successfully
-            </h3>
-            <p className="text-gray-500 text-base leading-relaxed mb-8 max-w-[280px]">
-              Your administrator details have been synchronized with the secure system.
-            </p>
+              <div className="space-y-3 md:col-span-2">
+                <Label htmlFor="location" className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-widest">Base Location</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#2d6a9f]" />
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => handleInputChange("location", e.target.value)}
+                    disabled={!isEditing}
+                    className={cn(
+                      "h-14 pl-12 rounded-2xl border-[#a3c7e6] bg-white transition-all text-[#0A2540] font-bold shadow-sm",
+                      !isEditing && "opacity-60 bg-white/50 cursor-not-allowed border-dashed"
+                    )}
+                  />
+                </div>
+              </div>
 
-            {/* Subtle Feedback Summary */}
-            <div className="w-full space-y-3 mb-8">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Sync Status</span>
-                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 border-none px-2 py-0.5 text-[10px] font-bold">
-                  ENCRYPTED & LIVE
-                </Badge>
+              <div className="space-y-3 md:col-span-2">
+                <Label htmlFor="bio" className="text-[10px] font-black text-[#2d6a9f] uppercase tracking-widest">Professional Dossier</Label>
+                <textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
+                  disabled={!isEditing}
+                  rows={6}
+                  className={cn(
+                    "w-full p-6 rounded-[1.5rem] border border-[#a3c7e6] bg-white transition-all text-[#0A2540] font-bold shadow-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20",
+                    !isEditing && "opacity-60 bg-white/50 cursor-not-allowed border-dashed"
+                  )}
+                  placeholder="Summarize your professional experience and system responsibilities..."
+                />
               </div>
             </div>
-
-            <Button
-              onClick={() => setShowSuccessModal(false)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-100 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-            >
-              <Check className="h-4 w-4" />
-              Continue to Dashboard
-            </Button>
-
-            <p className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.1em] mt-6">
-              SkillBridge Secure Admin Console
-            </p>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

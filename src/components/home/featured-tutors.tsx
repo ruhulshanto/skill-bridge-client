@@ -1,169 +1,450 @@
 "use client";
 
 import { Container } from "@/components/ui/container";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Star, ArrowRight, Heart } from "lucide-react";
+import { Star, ArrowUpRight, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 import { apiClient } from "@/lib/api";
-
 import { TutorData } from "@/types";
 
-export default function FeaturedTutors() {
-    const [tutors, setTutors] = useState<TutorData[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (!mounted) return; // Prevent running on server
-
-        const fetchFeaturedTutors = async () => {
-            try {
-                const response = await apiClient.getTutors({ limit: 4 });
-                if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-                    setTutors(response.data.data);
-                } else if (response && response.data && Array.isArray(response.data)) {
-                    setTutors(response.data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch featured tutors:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchFeaturedTutors();
-    }, [mounted]);
-
-    if (!mounted || loading) {
-        return (
-            <section className="py-16 bg-background">
-                <Container>
-                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">Featured Tutors</h2>
-                            <p className="text-lg text-muted-foreground max-w-2xl">
-                                Learn from the very best. Our tutors are verified experts in their fields.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="animate-pulse">
-                                <div className="aspect-[4/5] w-full bg-muted rounded-xl mb-4"></div>
-                                <div className="space-y-3">
-                                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                                    <div className="h-3 bg-muted rounded w-1/4"></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Container>
-            </section>
-        );
-    }
-
-    return (
-        <section className="py-24 bg-white relative overflow-hidden">
-            {/* Background Decoration */}
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-
-            <Container>
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-100 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
-                            <Star className="h-3 w-3 fill-blue-600" />
-                            <span>Top Rated Experts</span>
-                        </div>
-                        <h2 className="text-5xl md:text-7xl font-black tracking-tight text-gray-900 leading-[1.1]">
-                            Featured <span className="text-blue-600 relative inline-block">
-                                Tutors
-                                <div className="absolute -bottom-2 left-0 w-full h-2 bg-blue-100/50 -rotate-1 -z-10 rounded-lg" />
-                            </span>
-                        </h2>
-                        <p className="text-xl text-gray-500 max-w-2xl font-medium leading-relaxed">
-                            Learn from the very best. Our tutors are <span className="text-gray-900 font-bold underline decoration-blue-500/30 decoration-4 underline-offset-4">verified experts</span> in their fields, ready to help you succeed.
-                        </p>
-                    </div>
-                    <Link
-                        href="/tutors"
-                        className="group hidden md:flex items-center gap-3 px-8 py-4 bg-gray-900 rounded-2xl font-bold text-white shadow-[0_15px_30px_-10px_rgba(0,0,0,0.2)] hover:shadow-[0_25px_40px_-10px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-1"
-                    >
-                        View All Tutors
-                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                </div>
-
-                <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-                    {tutors.map((tutor) => (
-                        <div key={tutor.id} className="group relative flex flex-col h-full rounded-[2.5rem] bg-white border border-gray-100 p-5 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] transition-all duration-500 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] hover:-translate-y-3">
-                            {/* Image Container */}
-                            <div className="aspect-[4/5] w-full overflow-hidden rounded-[2rem] bg-gray-50 relative mb-6">
-                                <img
-                                    src={tutor.image || "/placeholder-tutor.jpg"}
-                                    alt={tutor.name}
-                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute top-4 right-4 z-10">
-                                    <button className="rounded-full bg-white/90 p-3 text-gray-400 backdrop-blur-md transition-all hover:text-red-500 hover:bg-white hover:scale-110 shadow-lg">
-                                        <Heart className="h-5 w-5" />
-                                    </button>
-                                </div>
-                                <div className="absolute bottom-4 left-4 right-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                                    <Button className="w-full bg-white/95 backdrop-blur-sm text-gray-900 hover:bg-white font-bold h-12 rounded-xl border-0 shadow-xl" asChild>
-                                        <Link href={`/tutors/${tutor.id}`}>Quick View</Link>
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex flex-col flex-1 px-1">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="space-y-1">
-                                        <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-1">{tutor.name}</h3>
-                                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-full w-fit">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">
-                                                {tutor.tutorProfile?.subjects?.[0]?.subject?.name || 'Top Expert'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {tutor.tutorProfile?.rating && (
-                                        <div className="flex items-center gap-1 rounded-xl bg-yellow-50 px-2.5 py-1.5 text-xs font-bold text-yellow-600 border border-yellow-100/50">
-                                            <Star className="h-3.5 w-3.5 fill-current" />
-                                            {tutor.tutorProfile.rating}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <p className="text-gray-500 leading-relaxed text-sm font-medium line-clamp-2 mb-6 flex-1">
-                                    {tutor.tutorProfile?.bio || 'Professional industry expert dedicated to student success and skill mastery.'}
-                                </p>
-
-                                <div className="flex items-center justify-between pt-5 mt-auto border-t border-gray-50">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-black text-gray-900">${tutor.tutorProfile?.hourlyRate || '45'}</span>
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">/ hr</span>
-                                    </div>
-                                    <Link href={`/tutors/${tutor.id}`} className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-300">
-                                        <ArrowRight className="h-5 w-5" />
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-12 text-center md:hidden">
-                    <Button size="lg" className="w-full bg-gray-900 h-14 rounded-2xl font-bold" asChild>
-                        <Link href="/tutors">Discover All Tutors</Link>
-                    </Button>
-                </div>
-            </Container>
-        </section>
+function useReveal(delay = 0) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    setVisible(false);
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.05 }
     );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return { ref, visible, delay };
+}
+
+function TutorCard({ tutor, index }: { tutor: TutorData; index: number }) {
+  const { ref, visible } = useReveal();
+  const [hovered, setHovered] = useState(false);
+
+  const subjects =
+    tutor.tutorProfile?.subjects
+      ?.slice(0, 2)
+      .map((s: { subject?: { name?: string } }) => s.subject?.name)
+      .filter((n): n is string => Boolean(n)) || [];
+  const rating = tutor.tutorProfile?.rating ?? 0;
+  const rate = tutor.tutorProfile?.hourlyRate ?? 0;
+  const reviews = tutor.tutorProfile?.totalReviews ?? 0;
+
+  return (
+    <div
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(48px)",
+        transition: `opacity 0.7s ease ${index * 100}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${index * 100}ms`,
+      }}
+    >
+      <Link
+        href={`/tutors/${tutor.id}`}
+        className="group block rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-card)",
+          border: "1px solid var(--border)",
+          boxShadow: hovered
+            ? "0 24px 48px -8px rgba(10,37,64,0.18), 0 0 0 1px var(--border)"
+            : "0 2px 8px rgba(10,37,64,0.06)",
+          transform: hovered ? "translateY(-6px)" : "translateY(0)",
+          transition:
+            "box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        {/* ── Image ── */}
+        <div
+          className="relative overflow-hidden"
+          style={{ aspectRatio: "4/3", position: "relative" }}
+        >
+          <Image
+            src={tutor.image || `https://i.pravatar.cc/400?img=${index + 10}`}
+            alt={tutor.name}
+            fill
+            className="object-cover"
+            style={{
+              transform: hovered ? "scale(1.08)" : "scale(1)",
+              transition: "transform 0.8s cubic-bezier(0.16,1,0.3,1)",
+            }}
+          />
+
+          {/* gradient */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(160deg, transparent 40%, rgba(10,37,64,0.55) 100%)",
+              opacity: hovered ? 1 : 0.4,
+              transition: "opacity 0.4s ease",
+            }}
+          />
+
+          {/* rating pill — top left */}
+          <div
+            className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm"
+            style={{
+              backgroundColor: "rgba(247,251,255,0.92)",
+              color: "var(--text)",
+              border: "1px solid rgba(169,215,255,0.4)",
+            }}
+          >
+            <Star
+              className="h-3 w-3 fill-current"
+              style={{ color: "#f59e0b" }}
+            />
+            {rating > 0 ? rating.toFixed(1) : "New"}
+            {reviews > 0 && (
+              <span style={{ color: "var(--text-faint)" }}>({reviews})</span>
+            )}
+          </div>
+
+          {/* rate pill — top right */}
+          <div
+            className="absolute top-3 right-3 px-3 py-1.5 rounded-full text-xs font-black backdrop-blur-sm"
+            style={{
+              backgroundColor: "var(--accent)",
+              color: "var(--text)",
+            }}
+          >
+            {rate === 0 ? "Free" : `$${rate}`}
+            {rate !== 0 && (
+              <span className="font-normal opacity-70">/hr</span>
+            )}
+          </div>
+
+          {/* name overlay — slides up on hover */}
+          <div
+            className="absolute bottom-0 left-0 right-0 p-4"
+            style={{
+              transform: hovered ? "translateY(0)" : "translateY(6px)",
+              opacity: hovered ? 1 : 0,
+              transition:
+                "transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease",
+            }}
+          >
+            <p
+              className="text-white font-bold text-sm leading-tight"
+              style={{ fontFamily: "var(--font-ubuntu), sans-serif" }}
+            >
+              {tutor.name}
+            </p>
+            <p className="text-white/70 text-xs mt-0.5">
+              {subjects[0] || "Expert Tutor"}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div className="p-5">
+          {/* name + verified */}
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <div>
+              <h3
+                className="font-bold text-[15px] leading-snug"
+                style={{
+                  color: "var(--text)",
+                  fontFamily: "var(--font-ubuntu), sans-serif",
+                }}
+              >
+                {tutor.name}
+              </h3>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <CheckCircle
+                  className="h-3 w-3"
+                  style={{ color: "var(--accent)" }}
+                />
+                <span
+                  className="text-[11px] font-semibold"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Verified Expert
+                </span>
+              </div>
+            </div>
+
+            {/* arrow icon */}
+            <div
+              className="shrink-0 h-8 w-8 rounded-lg flex items-center justify-center"
+              style={{
+                backgroundColor: hovered ? "var(--accent)" : "var(--bg-subtle)",
+                color: "var(--text)",
+                transform: hovered
+                  ? "rotate(-45deg) scale(1.1)"
+                  : "rotate(0deg) scale(1)",
+                transition:
+                  "background-color 0.3s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)",
+              }}
+            >
+              <ArrowUpRight className="h-4 w-4" />
+            </div>
+          </div>
+
+          {/* subject tags */}
+          {subjects.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {subjects.map((s) => (
+                <span
+                  key={s}
+                  className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                  style={{
+                    backgroundColor: "var(--bg-subtle)",
+                    color: "var(--text-muted)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* bio */}
+          <p
+            className="text-xs leading-relaxed line-clamp-2 mb-4 min-h-[2.25rem]"
+            style={{ color: "var(--text-muted)" }}
+          >
+            {tutor.tutorProfile?.bio?.trim()
+              ? tutor.tutorProfile.bio.trim()
+              : "Bio coming soon."}
+          </p>
+
+          {/* divider */}
+          <div
+            className="h-px mb-4"
+            style={{ backgroundColor: "var(--border)" }}
+          />
+
+          {/* stats row */}
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Star
+                  className="h-3.5 w-3.5 fill-current"
+                  style={{ color: "#f59e0b" }}
+                />
+                <span className="font-bold" style={{ color: "var(--text)" }}>
+                  {rating > 0 ? rating.toFixed(1) : "—"}
+                </span>
+              </div>
+              <div
+                className="h-3 w-px"
+                style={{ backgroundColor: "var(--border)" }}
+              />
+              <span style={{ color: "var(--text-faint)" }}>
+                {reviews > 0 ? `${reviews} reviews` : "No reviews yet"}
+              </span>
+            </div>
+
+            <span
+              className="font-black text-sm"
+              style={{
+                color: "var(--text)",
+                fontFamily: "var(--font-ubuntu), sans-serif",
+              }}
+            >
+              ${rate}
+              <span
+                className="text-[10px] font-normal ml-0.5"
+                style={{ color: "var(--text-faint)" }}
+              >
+                /hr
+              </span>
+            </span>
+          </div>
+        </div>
+
+        {/* bottom accent line */}
+        <div
+          className="h-[3px] rounded-b-2xl"
+          style={{
+            backgroundColor: "var(--accent)",
+            width: hovered ? "100%" : "0%",
+            transition: "width 0.5s cubic-bezier(0.16,1,0.3,1)",
+          }}
+        />
+      </Link>
+    </div>
+  );
+}
+
+export default function FeaturedTutors() {
+  const [tutors, setTutors] = useState<TutorData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const [headerVisible, setHeaderVisible] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    setHeaderVisible(false);
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setHeaderVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.05 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const load = async () => {
+      try {
+        const res = await apiClient.getTutors({ limit: 4 });
+        if (res?.data?.data && Array.isArray(res.data.data))
+          setTutors(res.data.data);
+        else if (res?.data && Array.isArray(res.data)) setTutors(res.data);
+      } catch {
+        /* silent */
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [mounted]);
+
+  if (!mounted || loading) {
+    return (
+      <section className="py-24" style={{ backgroundColor: "var(--bg)" }}>
+        <Container>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="rounded-2xl overflow-hidden"
+                style={{ border: "1px solid var(--border)" }}
+              >
+                <div
+                  className="animate-pulse"
+                  style={{
+                    aspectRatio: "4/3",
+                    backgroundColor: "var(--bg-subtle)",
+                  }}
+                />
+                <div className="p-5 space-y-3">
+                  <div
+                    className="h-4 rounded-lg animate-pulse w-2/3"
+                    style={{ backgroundColor: "var(--bg-subtle)" }}
+                  />
+                  <div
+                    className="h-3 rounded-lg animate-pulse w-1/2"
+                    style={{ backgroundColor: "var(--bg-subtle)" }}
+                  />
+                  <div
+                    className="h-3 rounded-lg animate-pulse w-full"
+                    style={{ backgroundColor: "var(--bg-subtle)" }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className="py-24 relative"
+      style={{ backgroundColor: "var(--bg)" }}
+    >
+      <div
+        className="absolute top-0 left-0 w-full h-px"
+        style={{
+          background:
+            "linear-gradient(to right, transparent, var(--border), transparent)",
+        }}
+      />
+
+      <Container>
+        {/* Header */}
+        <div
+          ref={headerRef}
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14"
+          style={{
+            opacity: headerVisible ? 1 : 0,
+            transform: headerVisible ? "translateY(0)" : "translateY(24px)",
+            transition:
+              "opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1)",
+          }}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span
+                className="h-px w-8"
+                style={{ backgroundColor: "var(--accent)" }}
+              />
+              <span
+                className="text-xs font-bold uppercase tracking-widest"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Top rated experts
+              </span>
+            </div>
+            <h2
+              className="section-heading text-5xl md:text-6xl"
+              style={{ color: "var(--text)" }}
+            >
+              Featured Tutors
+            </h2>
+            <p
+              className="text-base max-w-lg leading-relaxed"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Learn from{" "}
+              <span className="font-semibold" style={{ color: "var(--text)" }}>
+                verified expert tutors
+              </span>{" "}
+              ready to help you succeed.
+            </p>
+          </div>
+          <Link
+            href="/tutors"
+            className="inline-flex items-center gap-2 text-sm font-bold transition-all duration-200 hover:gap-3 whitespace-nowrap self-start md:self-end"
+            style={{ color: "var(--text)" }}
+          >
+            View all tutors <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* Cards grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {tutors.map((tutor, i) => (
+            <TutorCard key={tutor.id} tutor={tutor} index={i} />
+          ))}
+        </div>
+
+        {/* Mobile CTA */}
+        <div className="mt-10 md:hidden">
+          <Link
+            href="/tutors"
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-xl font-bold text-sm"
+            style={{ backgroundColor: "var(--accent)", color: "var(--text)" }}
+          >
+            View All Tutors <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </Container>
+    </section>
+  );
 }

@@ -1,14 +1,31 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, Star, Video, MapPin, Filter, Search, MessageSquare } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Star,
+  Video,
+  MapPin,
+  Search,
+  MessageSquare,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  DollarSign,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import studentService, { StudentBooking } from "@/services/student.service";
 import ReviewModal from "@/components/booking/review-modal";
 import RescheduleModal from "@/components/booking/reschedule-modal";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { SkeletonBookings } from "@/components/skeletons/skeleton-bookings";
+import { useDelayedLoading } from "@/hooks/use-delayed-loading";
 
 export default function MyBookingsPage() {
   const { user } = useAuth();
@@ -20,24 +37,22 @@ export default function MyBookingsPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedBookingForReschedule, setSelectedBookingForReschedule] = useState<StudentBooking | null>(null);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const showSkeleton = useDelayedLoading(loading, 300);
+
+  const fetchBookings = async () => {
+    try {
+      const response = await studentService.getBookings();
+      setBookings(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch bookings:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await studentService.getBookings();
-        setBookings(response.data || []);
-      } catch (error) {
-        console.error("Failed to fetch bookings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBookings();
-    
-    // Set up periodic refresh to check for review eligibility
-    const interval = setInterval(fetchBookings, 30000); // Refresh every 30 seconds
-    
+    const interval = setInterval(fetchBookings, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,410 +66,283 @@ export default function MyBookingsPage() {
     setIsRescheduleModalOpen(true);
   };
 
-  const handleRescheduleSuccess = () => {
-    // Refresh bookings to show updated schedule
-    const fetchBookings = async () => {
-      try {
-        const response = await studentService.getBookings();
-        setBookings(response.data || []);
-      } catch (error) {
-        console.error("Failed to fetch bookings:", error);
-      }
-    };
-    fetchBookings();
-  };
-
-  const handleReviewSubmitted = () => {
-    // Refresh bookings to update review status
-    const fetchBookings = async () => {
-      try {
-        const response = await studentService.getBookings();
-        setBookings(response.data || []);
-      } catch (error) {
-        console.error("Failed to fetch bookings:", error);
-      }
-    };
-    fetchBookings();
-  };
-
-  // Check if session time has passed
   const isSessionTimePassed = (booking: StudentBooking) => {
-    // Parse the booking date and end time properly
     const bookingDate = new Date(booking.date);
     const [hours, minutes] = booking.endTime.split(':').map(Number);
-    
-    // Create session end datetime in local timezone
     const sessionEndDateTime = new Date(bookingDate);
     sessionEndDateTime.setHours(hours, minutes, 0, 0);
-    
-    const now = new Date();
-    
-    // Debug logging
-    console.log('Review Check Debug:', {
-      bookingDate: booking.date,
-      bookingEndTime: booking.endTime,
-      sessionEndDateTime: sessionEndDateTime.toISOString(),
-      currentTime: now.toISOString(),
-      timePassed: now > sessionEndDateTime
-    });
-    
-    return now > sessionEndDateTime;
+    return new Date() > sessionEndDateTime;
   };
 
-  // Check if review should be enabled
+  const getEffectiveStatus = (booking: StudentBooking) => {
+    if (booking.status === "CANCELLED") return "CANCELLED";
+    if (booking.status === "COMPLETED") return "COMPLETED";
+    if (isSessionTimePassed(booking)) return "COMPLETED";
+    return "CONFIRMED";
+  };
+
+  const getStatusConfig = (booking: StudentBooking) => {
+    const status = getEffectiveStatus(booking);
+    switch (status) {
+      case "CONFIRMED":
+        return {
+          label: "Upcoming",
+          color: "bg-[var(--bg-subtle)] text-[var(--text)] border-[var(--border)]",
+          icon: <Clock className="h-3 w-3 text-[var(--text-muted)]" />
+        };
+      case "COMPLETED":
+        return {
+          label: "Completed",
+          color: "bg-[var(--bg-card)] text-[var(--text)] border-[var(--border)]",
+          icon: <CheckCircle2 className="h-3 w-3 text-[var(--text-muted)]" />
+        };
+      case "CANCELLED":
+        return {
+          label: "Cancelled",
+          color: "bg-red-50/90 text-red-800 border-red-200",
+          icon: <XCircle className="h-3 w-3" />
+        };
+      default:
+        return {
+          label: status,
+          color: "bg-[var(--bg-subtle)] text-[var(--text)] border-[var(--border)]",
+          icon: <AlertCircle className="h-3 w-3 text-[var(--text-muted)]" />
+        };
+    }
+  };
+
   const shouldEnableReview = (booking: StudentBooking) => {
-    return booking.status === "CONFIRMED" && 
-           !booking.review && 
-           isSessionTimePassed(booking);
+    return (booking.status === "COMPLETED" || isSessionTimePassed(booking)) && !booking.review;
   };
 
-  const filteredBookings = bookings.filter(booking => {
-    const matchesFilter = 
-      filter === "all" || 
-      (filter === "upcoming" && (booking.status === "CONFIRMED" && !isSessionTimePassed(booking))) ||
-      (filter === "completed" && (booking.status === "COMPLETED" || (booking.status === "CONFIRMED" && isSessionTimePassed(booking)))) ||
-      (filter === "cancelled" && booking.status === "CANCELLED");
-    
-    const matchesSearch = 
+  const filteredBookings = bookings.filter((booking) => {
+    const status = getEffectiveStatus(booking);
+    const matchesFilter =
+      filter === "all" ||
+      (filter === "upcoming" && status === "CONFIRMED") ||
+      (filter === "completed" && status === "COMPLETED") ||
+      (filter === "cancelled" && status === "CANCELLED");
+
+    const matchesSearch =
       booking.tutor.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      (booking.notes && booking.notes.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return matchesFilter && matchesSearch;
   });
 
-  // Get effective status (considering session time)
-  const getEffectiveStatus = (booking: StudentBooking): "CONFIRMED" | "COMPLETED" | "CANCELLED" => {
-    if (booking.status === "CONFIRMED" && isSessionTimePassed(booking)) {
-      return "COMPLETED";
-    }
-    return booking.status as "CONFIRMED" | "COMPLETED" | "CANCELLED";
-  };
-
-  const getStatusColor = (booking: StudentBooking): string => {
-    const effectiveStatus = getEffectiveStatus(booking);
-    switch (effectiveStatus) {
-      case "CONFIRMED": return "bg-blue-100 text-blue-800";
-      case "COMPLETED": return "bg-green-100 text-green-800";
-      case "CANCELLED": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusIcon = (booking: StudentBooking): React.ReactElement => {
-    const effectiveStatus = getEffectiveStatus(booking);
-    switch (effectiveStatus) {
-      case "CONFIRMED": return <Calendar className="h-4 w-4" />;
-      case "COMPLETED": return <Star className="h-4 w-4" />;
-      case "CANCELLED": return <Clock className="h-4 w-4" />;
-      default: return <Calendar className="h-4 w-4" />;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-8 w-32 bg-gray-200 rounded-lg animate-pulse" />
-        </div>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
+  if (loading && showSkeleton) {
+    return <SkeletonBookings />;
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-10 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Bookings</h1>
-          <p className="text-gray-600 mt-1">Manage your upcoming and past tutoring sessions</p>
+          <h1 className="section-heading text-4xl tracking-tight mb-2">My Bookings</h1>
+          <p className="text-[var(--text-muted)] font-medium">Manage and track your learning sessions.</p>
         </div>
-        <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-          <Calendar className="h-4 w-4 mr-2" />
-          Book New Session
-        </Button>
+        <Link href="/tutors">
+          <Button size="lg" className="rounded-xl px-6 transition-all hover:scale-[1.02]">
+            Book New Session <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </Link>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-blue-900">Total Bookings</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{bookings.length}</div>
-            <p className="text-xs text-blue-700">All sessions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-blue-900">Completed</CardTitle>
-              <Star className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
-              {bookings.filter(b => b.status === "COMPLETED").length}
-            </div>
-            <p className="text-xs text-blue-700">Finished sessions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-blue-900">Upcoming</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
-              {bookings.filter(b => b.status === "SCHEDULED").length}
-            </div>
-            <p className="text-xs text-blue-700">Scheduled sessions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-blue-900">Total Spent</CardTitle>
-              <User className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
-              ${bookings.reduce((sum, b) => sum + b.totalAmount, 0)}
-            </div>
-            <p className="text-xs text-blue-700">Total investment</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters and Search */}
-      <Card className="shadow-lg border-0">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Filter:</span>
-              <div className="flex gap-2">
-                {(["all", "upcoming", "completed", "cancelled"] as const).map((status) => (
-                  <Button
-                    key={status}
-                    variant={filter === status ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter(status)}
-                    className={filter === status ? "bg-blue-600 text-white" : ""}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Button>
-                ))}
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { label: "Total Sessions", value: bookings.length, icon: Calendar },
+          { label: "Completed", value: bookings.filter(b => getEffectiveStatus(b) === "COMPLETED").length, icon: CheckCircle2 },
+          { label: "Upcoming", value: bookings.filter(b => getEffectiveStatus(b) === "CONFIRMED").length, icon: Clock },
+        ].map((stat, i) => (
+          <Card key={i} className="overflow-hidden border border-[var(--border)] bg-[var(--bg-card)] shadow-sm transition-shadow hover:shadow-md group">
+            <div className="h-1 w-full bg-[var(--accent)]/80" />
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wider mb-1 text-[var(--text-muted)]">{stat.label}</p>
+                <p className="text-3xl font-black text-[var(--text)]">{stat.value}</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 flex-1">
-              <Search className="h-4 w-4 text-gray-600" />
-              <input
-                type="text"
-                placeholder="Search by tutor name or notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Bookings List */}
-      <div className="space-y-4">
-        {filteredBookings.length === 0 ? (
-          <Card className="shadow-lg border-0">
-            <CardContent className="text-center py-12">
-              <div className="p-4 rounded-full bg-gray-100 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <Calendar className="h-8 w-8 text-gray-400" />
+              <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)] text-[var(--text)] transition-transform group-hover:scale-105 shadow-sm">
+                <stat.icon className="h-6 w-6 text-[var(--text-muted)]" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
-              <p className="text-gray-600 mb-6">
-                {filter === "all" 
-                  ? "You haven't booked any sessions yet" 
-                  : `No ${filter} bookings found`}
-              </p>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
-                Browse Tutors
-              </Button>
             </CardContent>
           </Card>
+        ))}
+      </div>
+
+      {/* Filters & Search */}
+      <div className="flex flex-col lg:flex-row gap-6 items-center">
+        <div className="flex p-1.5 rounded-2xl w-full lg:w-auto border border-[var(--border)] bg-[var(--bg-subtle)]">
+          {(["all", "upcoming", "completed", "cancelled"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={cn(
+                "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex-1 lg:flex-none",
+                filter === s 
+                  ? "bg-[var(--bg-card)] text-[var(--text)] shadow-sm border border-[var(--border)]" 
+                  : "text-[var(--text-muted)] hover:text-[var(--text)]"
+              )}
+            >
+              {s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--text-faint)]" />
+          <input
+            type="text"
+            placeholder="Search sessions, tutors or notes..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-[var(--border)] bg-[var(--bg-card)] text-[var(--text)] placeholder:text-[var(--text-faint)] shadow-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* Bookings List */}
+      <div className="grid gap-6">
+        {filteredBookings.length === 0 ? (
+          <div className="text-center py-24 rounded-3xl border-2 border-dashed border-[var(--border)] bg-[var(--bg-subtle)]/30">
+            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-card)]">
+              <Calendar className="h-10 w-10 text-[var(--text-faint)]" />
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text)] mb-2">No sessions found</h3>
+            <p className="text-[var(--text-muted)] mb-8">Try adjusting your filters or book a new session.</p>
+            <Link href="/tutors">
+              <Button variant="outline" size="lg" className="rounded-xl">
+                Browse Tutors
+              </Button>
+            </Link>
+          </div>
         ) : (
-          filteredBookings.map((booking) => (
-            <Card key={booking.id} className="shadow-lg border-0 hover:shadow-xl transition-all duration-300 overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                  {/* Tutor Info */}
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={booking.tutor.user.image || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=48&h=48&fit=crop&crop=face&auto=format"}
-                      alt={booking.tutor.user.name}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-blue-100"
-                    />
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{booking.tutor.user.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                        <span>{booking.tutor.rating.toFixed(1)}</span>
-                        <span>({booking.tutor.totalReviews} reviews)</span>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        ${booking.tutor.hourlyRate}/hour
-                      </div>
-                    </div>
+          filteredBookings.map((booking) => {
+            const status = getStatusConfig(booking);
+            return (
+              <Card key={booking.id} className="overflow-hidden border border-[var(--border)] bg-[var(--bg-card)] shadow-sm hover:shadow-md transition-all duration-300 group">
+                <div className="flex flex-col lg:flex-row">
+                  {/* Left: Status & Date Sidebar (Mobile hidden, Desktop visible) */}
+                  <div className="hidden lg:flex w-48 flex-col items-center justify-center border-r border-[var(--border)] bg-[var(--bg-subtle)] p-6 text-center gap-2">
+                    <p className="text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">{new Date(booking.date).toLocaleDateString('en-US', { month: 'short' })}</p>
+                    <p className="text-4xl font-black text-[var(--text)]">{new Date(booking.date).getDate()}</p>
+                    <p className="text-xs font-bold text-[var(--text-muted)]">{new Date(booking.date).toLocaleDateString('en-US', { weekday: 'short' })}</p>
                   </div>
 
-                  {/* Booking Details */}
-                  <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">
-                          {new Date(booking.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">
-                          {booking.startTime} - {booking.endTime}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-700">Online</span>
-                      </div>
-                    </div>
-                    {booking.notes && (
-                      <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">{booking.notes}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status and Actions */}
-                  <div className="flex flex-col items-end gap-3">
-                    <Badge className={`${getStatusColor(booking)} flex items-center gap-1`}>
-                      {getStatusIcon(booking)}
-                      {getEffectiveStatus(booking)}
-                    </Badge>
-                    <div className="text-lg font-bold text-gray-900">
-                      ${booking.totalAmount}
-                    </div>
-                    <div className="flex gap-2">
-                      {getEffectiveStatus(booking) === "CONFIRMED" && (
-                        <>
-                          {booking.meetingLink && (
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                              <Video className="h-4 w-4 mr-1" />
-                              Join
-                            </Button>
-                          )}
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleRescheduleClick(booking)}
-                          >
-                            Reschedule
-                          </Button>
-                        </>
-                      )}
-                      {/* Show disabled review button for upcoming sessions */}
-                      {booking.status === "CONFIRMED" && !booking.review && !shouldEnableReview(booking) && (
-                        <div className="relative group">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            disabled={true}
-                            className="opacity-50 cursor-not-allowed"
-                          >
-                            <Star className="h-4 w-4 mr-1" />
-                            Leave Review
-                          </Button>
-                          <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
-                            Can't review before session completion
-                            <div className="absolute left-full top-1/2 transform -translate-y-1/2 -ml-1">
-                              <div className="border-4 border-transparent border-l-gray-800"></div>
-                            </div>
+                  <CardContent className="flex-1 p-6 lg:p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+                      {/* Tutor Image & Info */}
+                      <div className="flex items-center gap-4 lg:w-64">
+                        <div className="relative">
+                          <img
+                            src={booking.tutor.user.image || `https://i.pravatar.cc/150?u=${booking.tutor.id}`}
+                            alt={booking.tutor.user.name}
+                            className="w-16 h-16 rounded-2xl object-cover border-4 border-white shadow-md"
+                          />
+                          <div className={cn("absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center", status.color.split(' ')[0])}>
+                            {status.icon}
                           </div>
                         </div>
-                      )}
-                      {/* Show enabled review button for sessions that have ended */}
-                      {shouldEnableReview(booking) && (
-                        <Button 
-                          size="sm" 
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={() => handleReviewClick(booking)}
-                        >
-                          <Star className="h-4 w-4 mr-1" />
-                          Leave Review
-                        </Button>
-                      )}
-                      {/* Show enabled review button for completed sessions */}
-                      {booking.status === "COMPLETED" && !booking.review && (
-                        <Button 
-                          size="sm" 
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={() => handleReviewClick(booking)}
-                        >
-                          <Star className="h-4 w-4 mr-1" />
-                          Leave Review
-                        </Button>
-                      )}
-                      {booking.review && (
-                        <div className="text-sm text-gray-600 flex items-center gap-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span>Reviewed</span>
+                        <div>
+                          <h3 className="text-lg font-black text-[var(--text)] group-hover:text-[var(--text-muted)] transition-colors">{booking.tutor.user.name}</h3>
+                          <div className="flex items-center gap-1.5 text-[var(--text-muted)]">
+                            <Star className="h-3.5 w-3.5 fill-[var(--accent)] text-[var(--accent)] opacity-70" />
+                            <span className="text-sm font-bold">
+                              {(booking.tutor.rating ?? 0).toFixed(1)}
+                            </span>
+                          </div>
                         </div>
-                      )}
+                      </div>
+
+                      {/* Time & Meeting Info */}
+                      <div className="flex-1 space-y-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 text-[var(--text-muted)]">
+                              <Clock className="h-3 w-3" /> Time
+                            </p>
+                            <p className="text-sm font-bold text-[var(--text)]">{booking.startTime} - {booking.endTime}</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 text-[var(--text-muted)]">
+                              <MapPin className="h-3 w-3" /> Location
+                            </p>
+                            <p className="text-sm font-bold text-[var(--text)]">Online Session</p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 text-[var(--text-muted)]">
+                              <DollarSign className="h-3 w-3" /> Paid
+                            </p>
+                            <p className="text-sm font-bold text-[var(--text)]">${booking.totalAmount}</p>
+                          </div>
+                        </div>
+                        {booking.notes && (
+                          <div className="flex gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)]/40 p-3">
+                            <MessageSquare className="h-4 w-4 shrink-0 text-[var(--text-faint)]" />
+                            <p className="text-xs italic text-[var(--text-muted)] line-clamp-2">{booking.notes}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex lg:flex-col gap-3 lg:w-48 lg:items-stretch">
+                        <Badge variant="outline" className={cn("justify-center py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg", status.color)}>
+                          {status.label}
+                        </Badge>
+                        
+                        {getEffectiveStatus(booking) === "CONFIRMED" && (
+                          <>
+                            {booking.meetingLink ? (
+                              <Button className="rounded-xl text-xs font-bold h-10">
+                                <Video className="h-4 w-4 mr-2" /> Join Session
+                              </Button>
+                            ) : (
+                              <Button variant="outline" className="rounded-xl text-xs font-bold h-10" onClick={() => handleRescheduleClick(booking)}>
+                                Reschedule
+                              </Button>
+                            )}
+                          </>
+                        )}
+
+                        {shouldEnableReview(booking) && (
+                          <Button
+                            className="rounded-xl text-xs font-bold h-10"
+                            onClick={() => handleReviewClick(booking)}
+                          >
+                            <Star className="h-4 w-4 mr-2" /> Leave Review
+                          </Button>
+                        )}
+
+                        {booking.review && (
+                          <div className="flex items-center justify-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] p-2 text-[var(--text-muted)]">
+                            <Star className="h-3.5 w-3.5 fill-[var(--accent)] text-[var(--accent)] opacity-70" />
+                            <span className="text-sm font-bold">Reviewed</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </CardContent>
                 </div>
-              </CardContent>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         )}
       </div>
-      
-      {/* Review Modal */}
+
       {selectedBooking && (
         <ReviewModal
           isOpen={isReviewModalOpen}
-          onClose={() => {
-            setIsReviewModalOpen(false);
-            setSelectedBooking(null);
-          }}
+          onClose={() => setIsReviewModalOpen(false)}
           booking={selectedBooking}
-          onReviewSubmitted={handleReviewSubmitted}
+          onReviewSubmitted={fetchBookings}
         />
       )}
 
-      {/* Reschedule Modal */}
       {selectedBookingForReschedule && (
         <RescheduleModal
           isOpen={isRescheduleModalOpen}
-          onClose={() => {
-            setIsRescheduleModalOpen(false);
-            setSelectedBookingForReschedule(null);
-          }}
+          onClose={() => setIsRescheduleModalOpen(false)}
           booking={selectedBookingForReschedule}
-          onRescheduleSuccess={handleRescheduleSuccess}
+          onRescheduleSuccess={fetchBookings}
         />
       )}
     </div>

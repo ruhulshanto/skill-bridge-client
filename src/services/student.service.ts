@@ -118,25 +118,25 @@ const studentService = {
         const bookingsData = await bookingsResponse.json();
         const bookings = bookingsData.data || [];
         
-        // Calculate stats from bookings
-        const totalBookings = bookings.length;
-        const completedBookings = bookings.filter((b: any) => b.status === 'COMPLETED').length;
-        const upcomingBookings = bookings.filter((b: any) => b.status === 'CONFIRMED').length;
-        const totalSpent = bookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
-        const reviews = bookings
-          .filter((b: any) => b.review)
-          .map((b: any) => b.review!.rating);
-        const averageRating = reviews.length > 0
-          ? reviews.reduce((sum: number, r: number) => sum + r, 0) / reviews.length
-          : 0;
+         // Calculate stats from bookings
+         const totalBookings = bookings.length;
+         const completedBookings = bookings.filter((b: any) => b.status === 'COMPLETED').length;
+         const upcomingBookings = bookings.filter((b: any) => b.status === 'CONFIRMED').length;
+         const totalSpent = bookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
+         const reviews = bookings
+           .filter((b: any) => b.review)
+           .map((b: any) => b.review!.rating);
+         const averageRating = reviews.length > 0
+           ? reviews.reduce((sum: number, r: number) => sum + r, 0) / reviews.length
+           : 0;
 
-        return {
-          totalBookings,
-          completedBookings,
-          upcomingBookings,
-          totalSpent: Math.round(totalSpent / 100),
-          averageRating: Math.round(averageRating * 10) / 10,
-        };
+         return {
+           totalBookings,
+           completedBookings,
+           upcomingBookings,
+           totalSpent,
+           averageRating: Math.round(averageRating * 10) / 10,
+         };
       }
     } catch (error) {
       console.error("Failed to fetch bookings for stats calculation:", error);

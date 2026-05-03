@@ -137,16 +137,38 @@ export const renderIcon = (iconName: string | null | undefined): React.ReactElem
     return React.createElement(BookOpen, { className: "h-6 w-6" });
   }
 
-  // If it's a valid icon name in our map, render it
-  if (ICON_MAP[iconName]) {
-    const IconComponent = ICON_MAP[iconName];
+  // Normalize icon name for matching
+  const normalizedName = iconName.trim();
+
+  // 1. Direct match (case-sensitive)
+  if (ICON_MAP[normalizedName]) {
+    const IconComponent = ICON_MAP[normalizedName];
     return React.createElement(IconComponent, { className: "h-6 w-6" });
   }
 
-  // If it's an emoji, try to map it to an icon
-  if (EMOJI_TO_ICON_MAP[iconName]) {
-    const mappedIconName = EMOJI_TO_ICON_MAP[iconName];
+  // 2. Case-insensitive match
+  const lowerName = normalizedName.toLowerCase();
+  const caseInsensitiveMatch = Object.keys(ICON_MAP).find(
+    key => key.toLowerCase() === lowerName
+  );
+  if (caseInsensitiveMatch) {
+    const IconComponent = ICON_MAP[caseInsensitiveMatch];
+    return React.createElement(IconComponent, { className: "h-6 w-6" });
+  }
+
+  // 3. Emoji mapping
+  if (EMOJI_TO_ICON_MAP[normalizedName]) {
+    const mappedIconName = EMOJI_TO_ICON_MAP[normalizedName];
     const IconComponent = ICON_MAP[mappedIconName];
+    return React.createElement(IconComponent, { className: "h-6 w-6" });
+  }
+
+  // 4. Try to find if any key is contained in the name (e.g. "icon-BookOpen")
+  const partialMatch = Object.keys(ICON_MAP).find(
+    key => lowerName.includes(key.toLowerCase())
+  );
+  if (partialMatch) {
+    const IconComponent = ICON_MAP[partialMatch];
     return React.createElement(IconComponent, { className: "h-6 w-6" });
   }
 

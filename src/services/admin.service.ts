@@ -244,6 +244,81 @@ const adminService = {
     const data = await response.json();
     return data;
   },
+
+  // Get all tutor applications
+  async getApplications(params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: any[]; pagination: any }> {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+    const response = await fetch(`${API_URL}/api/admin/applications?${searchParams}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch tutor applications');
+    }
+
+    return await response.json();
+  },
+
+  // Get application by ID
+  async getApplicationById(id: string): Promise<any> {
+    const response = await fetch(`${API_URL}/api/admin/applications/${id}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || 'Failed to fetch application details');
+    }
+
+    const data = await response.json();
+    return data.data;
+  },
+
+  // Approve application
+  async approveApplication(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/api/admin/applications/${id}/approve`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to approve application');
+    }
+  },
+
+  // Reject application
+  async rejectApplication(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/api/admin/applications/${id}/reject`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to reject application');
+    }
+  },
 };
 
 export default adminService;

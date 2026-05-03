@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Calendar, TrendingUp, Award, Target, Clock, BookOpen, Star, Zap, Trophy, Flame, Book } from "lucide-react";
 import { useEffect, useState } from "react";
 import studentService, { StudentStats } from "@/services/student.service";
+import { cn } from "@/lib/utils";
 
 interface ProgressData {
   totalSessions: number;
@@ -138,32 +139,24 @@ export default function ProgressPage() {
       value: studentStats?.totalBookings || 0,
       description: "All tutoring sessions",
       icon: Calendar,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
     },
     {
       title: "Hours Learned",
       value: progressData?.totalHours || 0,
       description: "Total learning time",
       icon: Clock,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
     },
     {
       title: "Subjects Mastered",
       value: progressData?.subjectsLearned || 0,
       description: "Different subjects learned",
       icon: BookOpen,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
     },
     {
       title: "Current Streak",
       value: `${progressData?.streakDays || 0} days`,
       description: "Consecutive learning days",
       icon: Zap,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
     },
   ];
 
@@ -171,12 +164,12 @@ export default function ProgressPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-8 w-8 bg-[var(--bg-subtle)] rounded-lg animate-pulse" />
+          <div className="h-8 w-48 bg-[var(--bg-subtle)] rounded-lg animate-pulse" />
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -187,26 +180,31 @@ export default function ProgressPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg">
+        <div className="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg-subtle)] shadow-sm">
           <TrendingUp className="h-6 w-6" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Progress</h1>
-          <p className="text-gray-600">Track your learning journey and achievements</p>
+          <h1 className="section-heading text-3xl">My Progress</h1>
+          <p className="text-[var(--text-muted)]">Track your learning journey and achievements</p>
         </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat, index) => (
-          <Card key={index} className={`${stat.bgColor} border-0 shadow-md hover:shadow-lg transition-all duration-300`}>
+          <Card
+            key={index}
+            className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm hover:shadow-md transition-all duration-300"
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-gray-800">{stat.title}</CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <CardTitle className="text-sm font-semibold text-[var(--text-muted)]">{stat.title}</CardTitle>
+              <div className="p-2 rounded-lg border border-[var(--border)] bg-[var(--bg-subtle)]">
+                <stat.icon className="h-5 w-5 text-[var(--text-muted)]" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
-              <p className="text-sm text-gray-600">{stat.description}</p>
+              <div className="text-3xl font-black text-[var(--text)] mb-1">{stat.value}</div>
+              <p className="text-sm text-[var(--text-muted)]">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
@@ -215,11 +213,11 @@ export default function ProgressPage() {
       {/* Progress Overview */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Learning Progress */}
-        <Card className="shadow-xl border-0 overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-purple-500 to-indigo-600" />
+        <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-[var(--accent)]" />
           <CardHeader className="pb-6">
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-purple-600" />
+              <Target className="h-5 w-5 text-[var(--text-muted)]" />
               Learning Progress
             </CardTitle>
             <CardDescription>Your overall learning statistics</CardDescription>
@@ -228,44 +226,44 @@ export default function ProgressPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium">Session Completion</span>
-                <span className="text-sm font-bold text-purple-600">
+                <span className="text-sm font-bold text-[var(--text)]">
                   {progressData?.completedSessions || 0}/{progressData?.totalSessions || 0}
                 </span>
               </div>
               <Progress 
                 value={progressData ? (progressData.completedSessions / progressData.totalSessions) * 100 : 0} 
-                className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-indigo-600"
+                className="h-3 [&>div]:bg-[var(--accent)]"
               />
             </div>
             
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium">Average Rating</span>
-                <span className="text-sm font-bold text-yellow-600">
+                <span className="text-sm font-bold text-[var(--text)]">
                   {progressData?.averageRating || 0}/5.0 ⭐
                 </span>
               </div>
               <Progress 
                 value={progressData ? (progressData.averageRating / 5) * 100 : 0} 
-                className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-yellow-500 [&>div]:to-orange-600"
+                className="h-3 [&>div]:bg-[var(--accent)]"
               />
             </div>
 
             <div className="pt-4 border-t">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total Learning Time</span>
-                <span className="text-lg font-bold text-gray-900">{progressData?.totalHours || 0}h</span>
+                <span className="text-sm text-[var(--text-muted)]">Total Learning Time</span>
+                <span className="text-lg font-bold text-[var(--text)]">{progressData?.totalHours || 0}h</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Recent Milestones */}
-        <Card className="shadow-xl border-0 overflow-hidden">
-          <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-600" />
+        <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+          <div className="h-1.5 bg-[var(--accent)]" />
           <CardHeader className="pb-6">
             <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-green-600" />
+              <Award className="h-5 w-5 text-[var(--text-muted)]" />
               Recent Milestones
             </CardTitle>
             <CardDescription>Your latest achievements</CardDescription>
@@ -273,17 +271,17 @@ export default function ProgressPage() {
           <CardContent>
             <div className="space-y-4">
               {progressData?.recentMilestones.map((milestone) => (
-                <div key={milestone.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="p-2 rounded-lg bg-white shadow-sm">
-                    {milestone.type === "session" && <Calendar className="h-4 w-4 text-blue-600" />}
-                    {milestone.type === "subject" && <BookOpen className="h-4 w-4 text-purple-600" />}
-                    {milestone.type === "rating" && <Star className="h-4 w-4 text-yellow-600" />}
-                    {milestone.type === "streak" && <Zap className="h-4 w-4 text-orange-600" />}
+                <div key={milestone.id} className="flex items-start gap-3 p-3 border border-[var(--border)] bg-[var(--bg-subtle)]/40 rounded-xl">
+                  <div className="p-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] shadow-sm">
+                    {milestone.type === "session" && <Calendar className="h-4 w-4 text-[var(--text-muted)]" />}
+                    {milestone.type === "subject" && <BookOpen className="h-4 w-4 text-[var(--text-muted)]" />}
+                    {milestone.type === "rating" && <Star className="h-4 w-4 text-[var(--text-muted)]" />}
+                    {milestone.type === "streak" && <Zap className="h-4 w-4 text-[var(--text-muted)]" />}
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{milestone.title}</p>
-                    <p className="text-sm text-gray-600">{milestone.description}</p>
-                    <p className="text-xs text-gray-500 mt-1">{new Date(milestone.date).toLocaleDateString()}</p>
+                    <p className="font-semibold text-[var(--text)]">{milestone.title}</p>
+                    <p className="text-sm text-[var(--text-muted)]">{milestone.description}</p>
+                    <p className="text-xs text-[var(--text-faint)] mt-1">{new Date(milestone.date).toLocaleDateString()}</p>
                   </div>
                 </div>
               ))}
@@ -293,11 +291,11 @@ export default function ProgressPage() {
       </div>
 
       {/* Achievements */}
-      <Card className="shadow-xl border-0 overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-yellow-500 to-orange-600" />
+      <Card className="border border-[var(--border)] bg-[var(--bg-card)] shadow-sm overflow-hidden">
+        <div className="h-1.5 bg-[var(--accent)]" />
         <CardHeader className="pb-6">
           <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-yellow-600" />
+            <Award className="h-5 w-5 text-[var(--text-muted)]" />
             Achievements
           </CardTitle>
           <CardDescription>Unlock rewards as you learn</CardDescription>
@@ -307,21 +305,22 @@ export default function ProgressPage() {
             {progressData?.achievements.map((achievement) => (
               <div 
                 key={achievement.id} 
-                className={`p-4 rounded-xl border-2 text-center transition-all duration-300 ${
-                  achievement.unlockedAt 
-                    ? "border-yellow-200 bg-yellow-50 hover:shadow-md" 
-                    : "border-gray-200 bg-gray-50 opacity-60"
-                }`}
+                className={cn(
+                  "p-4 rounded-xl border text-center transition-all duration-300",
+                  achievement.unlockedAt
+                    ? "border-[var(--border)] bg-[var(--bg-subtle)]/40 hover:shadow-sm"
+                    : "border-[var(--border)] bg-[var(--bg-card)] opacity-60"
+                )}
               >
-                <div className="flex justify-center mb-2 text-purple-600">
+                <div className="flex justify-center mb-2 text-[var(--text-muted)]">
                   {achievement.icon}
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-1">{achievement.title}</h3>
-                <p className="text-xs text-gray-600 mb-3">{achievement.description}</p>
+                <h3 className="font-semibold text-[var(--text)] mb-1">{achievement.title}</h3>
+                <p className="text-xs text-[var(--text-muted)] mb-3">{achievement.description}</p>
                 {achievement.unlockedAt ? (
-                  <div className="text-xs text-green-600 font-medium">✓ Unlocked</div>
+                  <div className="text-xs text-[var(--text)] font-semibold">✓ Unlocked</div>
                 ) : (
-                  <div className="text-xs text-orange-600 font-medium">
+                  <div className="text-xs text-[var(--text-muted)] font-semibold">
                     {Math.round((achievement.progress / achievement.totalRequired) * 100)}% Complete
                   </div>
                 )}
