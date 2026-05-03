@@ -6,7 +6,22 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import tutorService, { TutorStats } from "@/services/tutor.service";
-import { Calendar, DollarSign, Star, Users, Clock, BookOpen, TrendingUp, Award, Target } from "lucide-react";
+import { 
+  HiOutlineAcademicCap, 
+  HiOutlineBanknotes, 
+  HiOutlineCalendarDays, 
+  HiOutlineClock, 
+  HiOutlineStar, 
+  HiOutlineUsers, 
+  HiOutlinePresentationChartBar,
+  HiOutlineArrowTrendingUp,
+  HiOutlineIdentification
+} from "react-icons/hi2";
+import { Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+import { TutorDashboardSkeleton } from "@/components/tutor/tutor-skeleton";
+
 
 export default function TutorDashboardPage() {
   const { user } = useAuth();
@@ -32,269 +47,241 @@ export default function TutorDashboardPage() {
     {
       title: "Total Sessions",
       value: stats?.totalSessions || 0,
-      description: "All tutoring sessions",
-      icon: BookOpen,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      description: "Lifetime sessions",
+      icon: HiOutlinePresentationChartBar,
+      accent: "var(--accent)",
     },
     {
-      title: "Completed Sessions",
+      title: "Completed",
       value: stats?.completedSessions || 0,
-      description: "Finished sessions",
-      icon: Calendar,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      description: "Successfully finished",
+      icon: HiOutlineCalendarDays,
+      accent: "var(--text)",
     },
     {
-      title: "Total Earnings",
+      title: "Revenue",
       value: `$${stats?.totalEarnings || 0}`,
-      description: "Revenue from sessions",
-      icon: DollarSign,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      description: "Total earnings",
+      icon: HiOutlineBanknotes,
+      accent: "var(--accent)",
     },
     {
-      title: "Rating",
-      value: `${stats?.rating.toFixed(1) || 0} ⭐`,
-      description: `${stats?.totalReviews || 0} reviews`,
-      icon: Star,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
+      title: "Avg. Rating",
+      value: `${stats?.rating.toFixed(1) || 0}`,
+      description: `${stats?.totalReviews || 0} student reviews`,
+      icon: HiOutlineStar,
+      accent: "var(--text)",
     },
   ];
 
   const quickActions = [
     {
-      title: "My Sessions",
-      description: "View and manage your tutoring sessions",
-      icon: Calendar,
+      title: "Manage Sessions",
+      description: "Track and organize your tutoring schedule",
+      icon: HiOutlineCalendarDays,
       href: "/tutor/sessions",
-      count: stats?.totalSessions || 0,
-      countLabel: "Total",
+      status: `${stats?.totalSessions || 0} Total`,
     },
     {
-      title: "Set Availability",
-      description: "Manage your weekly availability schedule",
-      icon: Clock,
+      title: "Availability",
+      description: "Update your weekly teaching hours",
+      icon: HiOutlineClock,
       href: "/tutor/availability",
-      count: "24/7",
-      countLabel: "Flexible",
+      status: "Flexible",
     },
     {
       title: "My Students",
-      description: "View your students and their progress",
-      icon: Users,
+      description: "Connect and monitor student progress",
+      icon: HiOutlineUsers,
       href: "/tutor/students",
-      count: 0,
-      countLabel: "Students",
+      status: "Active List",
     },
     {
-      title: "Profile Settings",
-      description: "Edit your tutor profile and subjects",
-      icon: Award,
+      title: "Profile Detail",
+      description: "Optimize your professional visibility",
+      icon: HiOutlineIdentification,
       href: "/tutor/profile",
-      count: "100%",
-      countLabel: "Complete",
+      status: "Public",
     }
   ];
 
-  return (
-    <div className="space-y-8">
-      {/* Welcome Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+  if (loading) {
+    return <TutorDashboardSkeleton />;
+  }
 
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {(user as { name?: string })?.name ?? "Tutor"}
+  return (
+    <div className="max-w-7xl mx-auto px-4 space-y-12 animate-fade-in">
+
+
+      {/* Refined Welcome Header */}
+      <div 
+        className="relative overflow-hidden rounded-[2.5rem] border border-[#a3c7e6] p-8 md:p-12 shadow-xl"
+        style={{ backgroundColor: "#e5f2ff" }}
+      >
+        <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-white/20 to-transparent pointer-events-none"></div>
+        <div className="relative z-10 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-[#a3c7e6] text-[#2d6a9f] text-[10px] font-black uppercase tracking-widest shadow-sm">
+             <Zap className="h-3 w-3" /> Instructor Command Center
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-[#0A2540]">
+            Welcome back, <span className="text-primary">{(user as { name?: string })?.name ?? "Tutor"}</span>
           </h1>
-          <p className="text-blue-100 text-lg">
-            Ready to inspire and educate your students today?
+          <p className="text-lg font-medium text-[#2d6a9f] max-w-2xl">
+            Monitor your educational impact, manage student interactions, and optimize your teaching schedule from a single interface.
           </p>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* Simplified Stats Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, index) => (
-          <Card key={index} className={`border-2 ${stat.borderColor} ${stat.bgColor} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-gray-800">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-lg bg-white/50 ${stat.color}`}>
-                <stat.icon className="h-5 w-5" />
+          <Card 
+            key={index} 
+            className="border border-[#a3c7e6] shadow-lg rounded-[2rem] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-2xl bg-white border border-[#a3c7e6] text-primary shadow-sm">
+                  <stat.icon className="h-6 w-6" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                {loading ? "..." : stat.value}
+              <div className="space-y-1">
+                <p className="text-4xl font-black tracking-tighter text-[#0A2540]">
+                  {loading ? <span className="inline-block w-12 h-8 bg-white/40 animate-pulse rounded" /> : stat.value}
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2d6a9f]">
+                  {stat.title}
+                </p>
               </div>
-              <p className="text-sm text-gray-600">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Quick Actions Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Quick Actions</h2>
-          <div className="h-px flex-1 bg-gray-100 mx-6 hidden md:block" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {quickActions.map((action, index) => (
-            <Link href={action.href} key={index} className="group">
-              <Card className="h-full border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-600" />
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md group-hover:scale-110 transition-transform duration-300">
-                      <action.icon className="h-5 w-5" />
-                    </div>
-                    <div className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
-                      {action.count} {action.countLabel}
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg font-bold text-gray-900 mt-4 group-hover:text-blue-600 transition-colors">{action.title}</CardTitle>
-                  <CardDescription className="text-sm text-gray-500 line-clamp-2">{action.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center text-sm font-semibold text-blue-600 group-hover:gap-2 transition-all">
-                    <span>Manage</span>
-                    <TrendingUp className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Enhanced Recent Sessions & Performance Metrics */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Recent Sessions */}
-        <Card className="lg:col-span-2 border-0 shadow-xl shadow-blue-500/5 bg-white/50 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500">
-          <CardHeader className="border-b border-gray-50 pb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-2xl bg-blue-50 text-blue-600 shadow-inner">
-                  <Clock className="h-6 w-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Recent Sessions</CardTitle>
-                  <CardDescription className="text-gray-500">Monitor your active learning sessions</CardDescription>
-                </div>
+      <div className="grid gap-12 lg:grid-cols-3">
+        {/* Left Column: Actions & Insights */}
+        <div className="lg:col-span-2 space-y-12">
+          {/* Quick Actions */}
+          <Card 
+            className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-2xl font-black text-[#0A2540]">Quick Actions</CardTitle>
               </div>
-              <Link href="/tutor/sessions">
-                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-semibold transition-colors">
-                  View All
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-8">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-50 bg-gray-50/30 animate-pulse">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full" />
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                      <div className="h-3 bg-gray-200 rounded w-1/4" />
+              <CardDescription className="text-[#2d6a9f] font-bold uppercase tracking-widest text-[10px] mt-1">
+                Essential management tools
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {quickActions.map((action, index) => (
+                  <Link href={action.href} key={index}>
+                    <div 
+                      className="group p-6 rounded-3xl border border-[#a3c7e6] transition-all hover:bg-white hover:translate-y-[-2px] flex items-center justify-between shadow-sm bg-white/40"
+                    >
+                      <div className="flex items-center gap-5">
+                        <div>
+                          <h3 className="font-black text-[#0A2540] transition-colors group-hover:text-primary">{action.title}</h3>
+                          <p className="text-xs font-medium text-[#2d6a9f] opacity-70">{action.description}</p>
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-[#2d6a9f] opacity-40">
+                        {action.status}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse" />
-                  <div className="relative p-6 rounded-full bg-white shadow-xl">
-                    <BookOpen className="h-10 w-10 text-blue-500" />
-                  </div>
+            </CardContent>
+          </Card>
+
+          {/* Activity Placeholder */}
+          <Card 
+            className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8">
+              <CardTitle className="text-2xl font-black text-[#0A2540]">Recent Activity</CardTitle>
+              <CardDescription className="text-[#2d6a9f] font-bold uppercase tracking-widest text-[10px] mt-1">
+                Your latest interactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-12 text-center">
+              <div className="w-20 h-20 rounded-[2rem] bg-white border border-[#a3c7e6] flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <HiOutlineCalendarDays className="h-8 w-8 text-[#2d6a9f] opacity-40" />
+              </div>
+              <p className="font-black text-lg text-[#0A2540]">No recent activity to show</p>
+              <p className="text-sm font-medium text-[#2d6a9f] opacity-70 max-w-xs mx-auto mt-2">
+                Start teaching and your session history will appear here for easy tracking.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Performance & Tips */}
+        <div className="space-y-8">
+          <Card 
+            className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl"
+            style={{ backgroundColor: "#e5f2ff" }}
+          >
+            <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8 pb-4">
+              <CardTitle className="text-xl font-black text-[#0A2540]">
+                Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-10">
+              {/* Satisfaction */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#2d6a9f]">Student Satisfaction</span>
+                  <span className="text-sm font-black text-primary">{stats?.rating.toFixed(1) || 0}/5.0</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No active sessions</h3>
-                <p className="text-gray-500 max-w-xs mx-auto mb-8">
-                  Your tutoring journey is just beginning. Set your availability to start receiving bookings.
+                <div className="h-2 w-full rounded-full overflow-hidden bg-white/50 border border-[#a3c7e6]/50">
+                  <div
+                    className="h-full rounded-full transition-all duration-1000 ease-out bg-primary"
+                    style={{ 
+                      width: `${Math.round((stats?.rating || 0) * 20)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Completion Rate */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#2d6a9f]">Session Completion</span>
+                  <span className="text-sm font-black text-emerald-600">98%</span>
+                </div>
+                <div className="h-2 w-full rounded-full overflow-hidden bg-white/50 border border-[#a3c7e6]/50">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: '98%' }}
+                  />
+                </div>
+              </div>
+
+              {/* Pro Tip */}
+              <div className="p-6 rounded-3xl bg-white/50 border border-[#a3c7e6]/30">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-primary">Pro Tip</p>
+                <p className="text-sm font-medium leading-relaxed text-[#2d6a9f]">
+                  Updating your availability regularly can increase your student booking rate by up to <span className="font-black text-[#0A2540]">40%</span>.
                 </p>
-                <Link href="/tutor/availability">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-6 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-300 group">
-                    <Calendar className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Set Availability
-                  </Button>
-                </Link>
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Performance Metrics */}
-        <Card className="border-0 shadow-xl shadow-indigo-500/5 bg-gradient-to-b from-white to-gray-50/50 overflow-hidden hover:shadow-2xl transition-all duration-500">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gray-50 text-blue-600">
-                <Target className="h-5 w-5" />
-              </div>
-              <CardTitle className="text-lg font-bold text-gray-900">Insights</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            {/* Metric 1 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">Student Satisfaction</span>
-                <span className="text-sm font-bold text-indigo-600">{stats?.rating.toFixed(1) || 0}/5.0</span>
-              </div>
-              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
-                  style={{ width: `${Math.round((stats?.rating || 0) * 20)}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Based on {stats?.totalReviews || 0} recent reviews</p>
-            </div>
-
-            {/* Metric 2 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">Completion Rate</span>
-                <span className="text-sm font-bold text-emerald-600">98%</span>
-              </div>
-              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                  style={{ width: '98%' }}
-                />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight">Last 30 days performance</p>
-            </div>
-
-            {/* Achievement Section */}
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
-              <div className="relative p-5 bg-white rounded-2xl border border-yellow-50 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="p-2.5 rounded-xl bg-yellow-50 text-yellow-600">
-                    <Award className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 line-height-tight">Power Tutor</p>
-                    <p className="text-xs text-gray-500">Top 5% this month</p>
-                  </div>
-                </div>
-                <div className="text-xl animate-bounce">🔥</div>
-              </div>
-            </div>
-
-            <Button className="w-full bg-gray-900 hover:bg-black text-white rounded-xl py-6 font-bold shadow-xl transition-all duration-300 hover:-translate-y-1">
-              Full Analytics Report
-            </Button>
-          </CardContent>
-        </Card>
+              <Link href="/tutor/earnings">
+                <Button 
+                  className="w-full h-14 rounded-xl bg-[#0A2540] hover:bg-[#0A2540]/90 text-white font-black uppercase tracking-widest text-[10px] mt-4 shadow-lg transition-all hover:-translate-y-1 border-0"
+                >
+                  View Earnings Report
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

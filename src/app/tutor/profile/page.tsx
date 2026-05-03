@@ -13,6 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { User as UserIcon, Mail, Shield, Camera, Edit3, Save, Bell, Lock, Globe, DollarSign, BookOpen, Award } from "lucide-react";
 import tutorService, { TutorProfile } from "@/services/tutor.service";
+import { TutorHeaderSkeleton } from "@/components/tutor/tutor-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+
 
 interface TutorProfileState {
   name: string;
@@ -239,221 +242,245 @@ export default function TutorProfilePage() {
 
   if (isLoading && !tutorProfile.name) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-        </div>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-8 bg-gray-200 rounded w-full"></div>
-          <div className="h-8 bg-gray-200 rounded w-full"></div>
-          <div className="h-8 bg-gray-200 rounded w-full"></div>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 space-y-12 animate-fade-in">
+
+        <TutorHeaderSkeleton />
+        <Card className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl bg-[#e5f2ff]">
+          <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8 md:p-10">
+            <Skeleton className="h-8 w-48 bg-white/40" />
+          </CardHeader>
+          <CardContent className="p-10 space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-3 w-24 bg-white/20" />
+                  <Skeleton className="h-14 w-full rounded-2xl bg-white/40" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-24 bg-white/20" />
+              <Skeleton className="h-32 w-full rounded-2xl bg-white/40" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="text-gray-600 mt-1">Manage your tutor profile and professional information</p>
+    <div className="max-w-4xl mx-auto px-4 space-y-12 animate-fade-in">
+
+      {/* Refined Welcome Header */}
+      <div 
+        className="relative overflow-hidden rounded-[2.5rem] border border-[#a3c7e6] p-8 md:p-12 shadow-xl"
+        style={{ backgroundColor: "#e5f2ff" }}
+      >
+        <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-white/20 to-transparent pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-[#a3c7e6] text-[#2d6a9f] text-[10px] font-black uppercase tracking-widest shadow-sm">
+               <Shield className="h-3 w-3" /> Credential Engine
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#0A2540]">
+              Profile Settings
+            </h1>
+            <p className="text-lg font-medium text-[#2d6a9f] max-w-2xl">
+              Refine your professional presence and teaching credentials to optimize student discoverability and engagement.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            {isEditing && (
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="h-14 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] border border-[#a3c7e6] bg-white text-[#0A2540] shadow-sm transition-all"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button
+              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              className="h-14 px-8 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg transition-all hover:scale-105 bg-primary hover:bg-primary/90 border-0"
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : isEditing ? (
+                <>
+                  <Save className="h-4 w-4 mr-3" />
+                  Save Changes
+                </>
+              ) : (
+                <>
+                  <Edit3 className="h-4 w-4 mr-3" />
+                  Edit Profile
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className={isEditing ? "bg-gray-600 hover:bg-gray-700" : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"}
-          disabled={isLoading}
-        >
-          {isLoading ? "Saving..." : isEditing ? (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </>
-          ) : (
-            <>
-              <Edit3 className="h-4 w-4 mr-2" />
-              Edit Profile
-            </>
-          )}
-        </Button>
       </div>
 
-      {/* Profile Information */}
-      <Card className="shadow-lg border-0">
-        <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-600" />
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserIcon className="h-5 w-5 text-blue-600" />
-            Profile Information
-          </CardTitle>
-          <CardDescription>
-            Your professional information that students will see
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+      <div className="grid gap-12">
+        {/* Profile Information */}
+        <Card 
+          className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl"
+          style={{ backgroundColor: "#e5f2ff" }}
+        >
+          <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8 md:p-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-white border border-[#a3c7e6] text-primary shadow-sm">
+                <UserIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-[#0A2540]">Public Identity</CardTitle>
+                <CardDescription className="text-[#2d6a9f] font-bold uppercase tracking-widest text-[10px] mt-1">Information visible to potential students</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-10 space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Full Name</Label>
+                <input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  disabled={!isEditing}
+                  className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Email Address</Label>
+                <input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  disabled={true}
+                  className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none transition-all font-bold shadow-sm bg-white text-[#0A2540] opacity-30"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="location" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Location</Label>
+                <input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  disabled={!isEditing}
+                  placeholder="City, Country"
+                  className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="hourlyRate" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Hourly Rate ($)</Label>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-[#2d6a9f] opacity-40">$</span>
+                  <input
+                    id="hourlyRate"
+                    type="number"
+                    value={formData.hourlyRate}
+                    onChange={(e) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 0 })}
+                    disabled={!isEditing}
+                    className="w-full pl-10 pr-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="bio" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Professional Bio</Label>
+              <textarea
+                id="bio"
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 disabled={!isEditing}
-                className="mt-1"
+                rows={5}
+                placeholder="Describe your expertise and teaching philosophy..."
+                className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50 resize-none leading-relaxed"
               />
             </div>
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={true} // Always disabled - email cannot be changed
-                className="mt-1 bg-gray-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                disabled={!isEditing}
-                className="mt-1"
-                placeholder="City, Country"
-              />
-            </div>
-            <div>
-              <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-              <Input
-                id="hourlyRate"
-                type="number"
-                value={formData.hourlyRate}
-                onChange={(e) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 0 })}
-                disabled={!isEditing}
-                className="mt-1"
-                placeholder="50"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              disabled={!isEditing}
-              className="mt-1"
-              rows={4}
-              placeholder="Tell students about your teaching experience and expertise..."
-            />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Professional Information */}
-      <Card className="shadow-lg border-0">
-        <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5 text-green-600" />
-            Professional Information
-          </CardTitle>
-          <CardDescription>
-            Your teaching credentials and experience
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="experience">Years of Experience</Label>
-              <Input
-                id="experience"
-                type="number"
-                value={formData.experience}
-                onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                disabled={!isEditing}
-                className="mt-1"
-                placeholder="5"
-              />
+        {/* Professional Information */}
+        <Card 
+          className="overflow-hidden rounded-[2.5rem] border-[#a3c7e6] shadow-xl"
+          style={{ backgroundColor: "#e5f2ff" }}
+        >
+          <CardHeader className="bg-white/30 border-b border-[#a3c7e6]/50 p-8 md:p-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-white border border-[#a3c7e6] text-[#0A2540] shadow-sm">
+                <Award className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-[#0A2540]">Expertise Matrix</CardTitle>
+                <CardDescription className="text-[#2d6a9f] font-bold uppercase tracking-widest text-[10px] mt-1">Validate your skills to build ecosystem trust</CardDescription>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="education">Education</Label>
-              <Input
-                id="education"
-                value={formData.education}
-                onChange={(e) => setFormData({ ...formData, education: e.target.value })}
-                disabled={!isEditing}
-                className="mt-1"
-                placeholder="Master's in Computer Science"
-              />
+          </CardHeader>
+          <CardContent className="p-10 space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label htmlFor="experience" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Years of Experience</Label>
+                <input
+                  id="experience"
+                  type="number"
+                  value={formData.experience}
+                  onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
+                  disabled={!isEditing}
+                  className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="education" className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 text-[#2d6a9f]">Educational Background</Label>
+                <input
+                  id="education"
+                  value={formData.education}
+                  onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                  disabled={!isEditing}
+                  placeholder="Academic credentials (e.g. MS in Computer Science)"
+                  className="w-full px-6 py-4 border border-[#a3c7e6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold shadow-sm bg-white text-[#0A2540] disabled:opacity-50"
+                />
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Buttons */}
-      {isEditing && (
-        <div className="flex gap-4 justify-end">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-            <Save className="h-4 w-4 mr-2" />
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100 animate-slide-up">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
+          <div className="bg-[#e5f2ff] rounded-[3rem] p-10 max-w-md w-full mx-4 transform transition-all duration-500 scale-100 animate-slide-up shadow-2xl border border-[#a3c7e6]">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-[2rem] bg-white border border-[#a3c7e6] mb-8 shadow-inner">
+                <CheckCircle className="h-10 w-10 text-emerald-500" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Profile Updated Successfully!</h3>
-              <p className="text-gray-600 mb-6">
-                Your tutor profile information has been updated and saved successfully.
+              <h3 className="text-3xl font-black mb-4 tracking-tight text-[#0A2540]">Profile Synchronized</h3>
+              <p className="font-medium text-[#2d6a9f] opacity-60 mb-8 leading-relaxed">
+                Your professional credentials have been successfully verified and updated across the platform matrix.
               </p>
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <h4 className="font-semibold text-gray-900 mb-2">Updated Information:</h4>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Name:</span>
-                    <span className="font-medium text-gray-900">{formData.name || "Not provided"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Location:</span>
-                    <span className="font-medium text-gray-900">{formData.location || "Not provided"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Hourly Rate:</span>
-                    <span className="font-medium text-gray-900">${formData.hourlyRate}/hour</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Experience:</span>
-                    <span className="font-medium text-gray-900">{formData.experience} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Education:</span>
-                    <span className="font-medium text-gray-900">{formData.education || "Not provided"}</span>
-                  </div>
-                  <div className="flex justify-between items-start">
-                    <span>Bio:</span>
-                    <span className="font-medium text-gray-900 truncate ml-2 max-w-[200px]">{formData.bio || "Not provided"}</span>
-                  </div>
+              
+              <div className="rounded-3xl p-6 mb-10 text-left space-y-4 shadow-inner bg-white/40 border border-[#a3c7e6]/30">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-[#2d6a9f] opacity-40 mb-2">Updated Ledger Snapshot</h4>
+                <div className="space-y-3 text-sm font-bold">
+                  {[
+                    { label: "Matrix Rate", value: `$${formData.hourlyRate}/hr` },
+                    { label: "Exp Lifecycle", value: `${formData.experience} cycles` },
+                    { label: "Edu Status", value: formData.education || "Verified" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex justify-between border-b border-[#a3c7e6]/20 pb-2">
+                      <span className="text-[#2d6a9f] opacity-40">{item.label}</span>
+                      <span className="text-[#0A2540]">{item.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
+
               <Button 
                 onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                className="w-full h-16 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg transition-all hover:scale-105 bg-[#0A2540] hover:bg-[#0A2540]/90 border-0"
               >
-                Got it!
+                Close Protocol
               </Button>
             </div>
           </div>
