@@ -310,10 +310,46 @@ export default function FeaturedTutors() {
     if (!mounted) return;
     const load = async () => {
       try {
-        const res = await apiClient.getTutors({ limit: 4 });
-        if (res?.data?.data && Array.isArray(res.data.data))
-          setTutors(res.data.data);
-        else if (res?.data && Array.isArray(res.data)) setTutors(res.data);
+        // Fetch more tutors initially so we can find the specific ones
+        const res = await apiClient.getTutors({ limit: 50 });
+
+        let allTutors: TutorData[] = [];
+        if (res?.data?.data && Array.isArray(res.data.data)) {
+          allTutors = res.data.data;
+        } else if (res?.data && Array.isArray(res.data)) {
+          allTutors = res.data;
+        }
+
+        if (allTutors.length > 0) {
+          // The specific tutors requested by the user
+          const targetImages = [
+            "tutorboy7",
+            "tutorgirls1",
+            "tutorboy5",
+            "tutorgirls8"
+          ];
+
+          const featured = allTutors.filter(t => {
+            if (!t.image) return false;
+            const imgLower = t.image.toLowerCase();
+            return targetImages.some(target => imgLower.includes(target));
+          });
+
+          // Order them exactly as requested
+          const sortedFeatured = targetImages.map(target =>
+            featured.find(t => t.image?.toLowerCase().includes(target))
+          ).filter(Boolean) as TutorData[];
+
+          // Fallback padding if for some reason we don't find all 4
+          if (sortedFeatured.length < 4) {
+            const others = allTutors
+              .filter(t => !sortedFeatured.some(f => f.id === t.id))
+              .slice(0, 4 - sortedFeatured.length);
+            setTutors([...sortedFeatured, ...others]);
+          } else {
+            setTutors(sortedFeatured.slice(0, 4));
+          }
+        }
       } catch {
         /* silent */
       } finally {

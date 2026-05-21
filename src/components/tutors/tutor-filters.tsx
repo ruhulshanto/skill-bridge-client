@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { X, Star, Users, DollarSign } from "lucide-react";
+import { X, Star, Users, DollarSign, Search } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
 interface Category {
@@ -255,17 +255,14 @@ export default function TutorFilters() {
                     type="number"
                     min={minPrice}
                     max={maxPrice}
-                    value={currentMinRate ? priceRange[0] : ""}
+                    value={priceRange[0]}
                     onChange={(e) => {
                       const raw = e.target.value;
                       if (raw === "") {
                         setPriceRange([minPrice, priceRange[1]]);
-                        updateFilters({ minRate: null });
                       } else {
                         const val = parseInt(raw) || minPrice;
-                        const newMin = Math.min(val, priceRange[1] - 5);
-                        setPriceRange([newMin, priceRange[1]]);
-                        updateFilters({ minRate: newMin.toString() });
+                        setPriceRange([val, priceRange[1]]);
                       }
                     }}
                     onBlur={(e) => {
@@ -297,17 +294,14 @@ export default function TutorFilters() {
                     type="number"
                     min={minPrice}
                     max={maxPrice}
-                    value={currentMaxRate ? priceRange[1] : ""}
+                    value={priceRange[1]}
                     onChange={(e) => {
                       const raw = e.target.value;
                       if (raw === "") {
                         setPriceRange([priceRange[0], maxPrice]);
-                        updateFilters({ maxRate: null });
                       } else {
                         const val = parseInt(raw) || maxPrice;
-                        const newMax = Math.max(val, priceRange[0] + 5);
-                        setPriceRange([priceRange[0], newMax]);
-                        updateFilters({ maxRate: newMax.toString() });
+                        setPriceRange([priceRange[0], val]);
                       }
                     }}
                     onBlur={(e) => {
@@ -330,13 +324,27 @@ export default function TutorFilters() {
                   />
                 </div>
               </div>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  updateFilters({ 
+                    minRate: priceRange[0] > minPrice ? priceRange[0].toString() : null, 
+                    maxRate: priceRange[1] < maxPrice ? priceRange[1].toString() : null 
+                  });
+                }}
+              >
+                <Search className="h-4 w-4" /> Apply Price Filter
+              </Button>
 
               {/* Current range display */}
               <div className="text-xs text-center" style={{ color: "var(--text-faint)" }}>
                 {currentMinRate || currentMaxRate ? (
                   <span>
-                    Filter: ${priceRange[0]} – ${priceRange[1]}
-                    {priceRange[1] === maxPrice && "+"}
+                    Filter active: ${currentMinRate || minPrice} – ${currentMaxRate || maxPrice}
+                    {(!currentMaxRate || parseInt(currentMaxRate) === maxPrice) && "+"}
                   </span>
                 ) : (
                   <span>All prices (${minPrice}–${maxPrice}+)</span>

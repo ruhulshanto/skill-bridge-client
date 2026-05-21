@@ -31,12 +31,14 @@ export default function TutorGrid() {
         const category = searchParams.get("category");
         const search = searchParams.get("search");
         const minRating = searchParams.get("minRating");
+        const minRate = searchParams.get("minRate");
         const maxRate = searchParams.get("maxRate");
         const free = searchParams.get("free");
 
         if (category) params.category = category;
         if (search) params.search = search;
         if (minRating) params.minRating = minRating;
+        if (minRate) params.minRate = minRate;
         if (maxRate) params.maxRate = maxRate;
         if (free) params.free = free;
         

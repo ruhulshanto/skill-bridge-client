@@ -13,8 +13,8 @@ export const DemoLogins = ({ onSelect, disabled }: DemoLoginsProps) => {
   const demos = [
     {
       role: "Tutor",
-      email: "david.chen@skillbridge.local",
-      pass: "David@123456",
+      email: "tutor.f1@example.com",
+      pass: "Tutor@123456",
       icon: GraduationCap,
       color: "bg-blue-500/5 text-blue-600 dark:text-blue-400 border-blue-500/10",
       hover: "hover:bg-blue-500/15 hover:border-blue-500/30",
